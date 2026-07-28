@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Equipos - ICEL La Villa</title>
@@ -20,18 +21,24 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- SSO LOGIN -->
+    <!-- SSO LOGIN PARA ALUMNOS -->
     <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/80 z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
-            <div class="w-16 h-16 bg-[#1a237e] rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4">
-                <i class="fas fa-shield-alt"></i>
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border-t-4 border-[#00c853]">
+            <div class="w-16 h-16 bg-[#00c853] rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg">
+                <i class="fas fa-clipboard-check"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-1">Acceso a Inventario</h2>
-            <form id="formLogin" class="space-y-4 mt-6">
-                <input type="text" id="loginNombre" required placeholder="Tu Nombre" class="input-field text-center font-medium">
-                <input type="password" id="loginPin" required placeholder="PIN" class="input-field text-center tracking-[0.5em] font-bold">
-                <button type="submit" class="w-full bg-[#00c853] hover:bg-[#00a844] text-white font-bold py-3 rounded-lg shadow-md">ENTRAR</button>
-            </form>
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">Registro de Equipos</h2>
+            <p class="text-sm text-gray-500 mb-6">Inicia sesión con tu cuenta de alumno para capturar</p>
+            
+            <div id="g_id_onload"
+                 data-client_id="41940845604-c5ag9q0mqhbla0ubhu40akok5euklh33.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="validarLoginAlumno"
+                 data-auto_prompt="false">
+            </div>
+            
+            <div class="g_id_signin flex justify-center" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
         </div>
     </div>
 
@@ -72,17 +79,14 @@
                     <input type="text" id="eqUbicacion" required placeholder="Ej. Laboratorio 1, Bodega..." class="input-field">
                 </div>
                 
-                <!-- BOTÓN DE CÁMARA (NUEVO) -->
                 <div>
                     <label class="input-label">5. EVIDENCIA FOTOGRÁFICA</label>
                     <div class="flex items-center gap-3 mt-1">
                         <label class="flex-1 cursor-pointer bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-center py-2.5 rounded-lg text-sm font-semibold transition-colors">
                             <i class="fas fa-camera"></i> Tomar Foto
-                            <!-- capture="environment" abre la cámara trasera en el cel -->
                             <input type="file" id="eqFotoFile" accept="image/*" capture="environment" class="hidden" onchange="procesarFoto(event)">
                         </label>
                         
-                        <!-- Aquí se muestra la miniatura de la foto -->
                         <div id="cajaMiniatura" class="hidden w-11 h-11 rounded-lg border-2 border-gray-300 relative">
                             <img id="imgMiniatura" class="w-full h-full object-cover rounded-md">
                             <button type="button" onclick="quitarFoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md"><i class="fas fa-times"></i></button>
@@ -103,23 +107,36 @@
     </div>
 
     <script>
-        const PIN_ACCESO = "1234";
-        // ¡REEMPLAZA AQUÍ CON TU NUEVA URL DE IMPLEMENTACIÓN!
         const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
 
         let modoEdicion = false;
-        let fotoDataFinal = ""; // Variable para guardar la foto comprimida
+        let fotoDataFinal = ""; 
 
-        document.getElementById('formLogin').addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (document.getElementById('loginPin').value === PIN_ACCESO) {
+        function decodificarJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function validarLoginAlumno(response) {
+            const datosUsuario = decodificarJwtResponse(response.credential);
+            const correoUsuario = datosUsuario.email.toLowerCase();
+
+            // Permitir solo correos del dominio de la universidad
+            const dominioPermitido = "@icel.edu.mx"; 
+            
+            if (correoUsuario.endsWith(dominioPermitido)) {
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 document.getElementById('searchId').focus();
-            } else alert("PIN Incorrecto");
-        });
+            } else {
+                alert("Acceso denegado. Utiliza tu correo institucional (@icel.edu.mx) para registrar equipos.");
+            }
+        }
 
-        // ¿Para qué funciona?: Toma la foto de 5MB del celular, dibuja una copia pequeña (máximo 800px) en un lienzo invisible, y la convierte en texto (Base64) para poder enviarla por internet sin saturar la base de datos.
         function procesarFoto(event) {
             const archivo = event.target.files[0];
             if(!archivo) return;
@@ -129,7 +146,7 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; // Ancho máximo
+                    const MAX_WIDTH = 800; 
                     const proporcion = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * proporcion;
@@ -137,10 +154,8 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // Comprime al 70% de calidad en JPG
                     fotoDataFinal = canvas.toDataURL('image/jpeg', 0.7); 
 
-                    // Mostramos la miniatura
                     document.getElementById('imgMiniatura').src = fotoDataFinal;
                     document.getElementById('cajaMiniatura').classList.remove('hidden');
                 }
@@ -149,7 +164,6 @@
             lector.readAsDataURL(archivo);
         }
 
-        // Elimina la foto si se equivocaron
         function quitarFoto() {
             fotoDataFinal = "";
             document.getElementById('eqFotoFile').value = "";
@@ -194,7 +208,7 @@
                         document.getElementById('eqUbicacion').value = '';
                         btn.innerHTML = '<i class="fas fa-save"></i> <span>Registrar</span>';
                     }
-                    quitarFoto(); // Limpiar la foto anterior de la pantalla
+                    quitarFoto(); 
                     btn.disabled = false;
                 }
             };
@@ -206,7 +220,6 @@
             if(e.key === 'Enter') buscarEquipo();
         });
 
-        // NUEVO SISTEMA DE ENVÍO DE DATOS (POST) PARA SOPORTAR IMÁGENES
         document.getElementById('formEquipo').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -220,10 +233,9 @@
                 piezas: document.getElementById('eqPiezas').value,
                 descripcion: document.getElementById('eqDescripcion').value.trim(),
                 ubicacion: document.getElementById('eqUbicacion').value.trim(),
-                fotoBase64: fotoDataFinal // Se manda todo el texto de la imagen comprimida
+                fotoBase64: fotoDataFinal 
             };
 
-            // Usamos Fetch POST en vez de JSONP para poder enviar el peso de la imagen
             fetch(URL_API, {
                 method: 'POST',
                 body: JSON.stringify(payload),
