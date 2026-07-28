@@ -28,7 +28,7 @@
                 <i class="fas fa-clipboard-check"></i>
             </div>
             <h2 class="text-2xl font-bold text-gray-800 mb-1">Registro de Equipos</h2>
-            <p class="text-sm text-gray-500 mb-6">Inicia sesión con tu cuenta de alumno para capturar</p>
+            <p class="text-sm text-gray-500 mb-6">Inicia sesión con tu cuenta autorizada para capturar</p>
             
             <div id="g_id_onload"
                  data-client_id="41940845604-c5ag9q0mqhbla0ubhu40akok5euklh33.apps.googleusercontent.com"
@@ -112,6 +112,7 @@
         let modoEdicion = false;
         let fotoDataFinal = ""; 
 
+        // ¿Para qué funciona?: Desencripta el token de Google.
         function decodificarJwtResponse(token) {
             let base64Url = token.split('.')[1];
             let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -121,19 +122,32 @@
             return JSON.parse(jsonPayload);
         }
 
+        // ¿Para qué funciona?: Compara el correo del usuario que inicia sesión contra una lista específica que tú defines. Si el correo está en la lista, muestra el sistema; si no, bloquea el acceso.
         function validarLoginAlumno(response) {
             const datosUsuario = decodificarJwtResponse(response.credential);
             const correoUsuario = datosUsuario.email.toLowerCase();
 
-            // Permitir solo correos del dominio de la universidad
-            const dominioPermitido = "@icel.edu.mx"; 
+            // ==========================================
+            // LISTA EXACTA DE ALUMNOS PERMITIDOS
+            // (Agrega o quita correos de aquí según necesites)
+            // ==========================================
+            const alumnosPermitidos = [
+                "000078438@alumnos.icel.edu.mx",
+                "000011454@alumnos.icel.edu.mx",
+                "000075968@alumnos.icel.edu.mx",
+                "urielvazquez@icel.edu.mx",
+                "000072748@alumnos.icel.edu.mx"
+            ]; 
             
-            if (correoUsuario.endsWith(dominioPermitido)) {
+            // Verificamos si el correo está dentro de la lista
+            if (alumnosPermitidos.includes(correoUsuario)) {
+                // Acceso concedido
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 document.getElementById('searchId').focus();
             } else {
-                alert("Acceso denegado. Utiliza tu correo institucional (@icel.edu.mx) para registrar equipos.");
+                // Acceso denegado
+                alert("Acceso denegado. Tu cuenta no está autorizada para capturar en este inventario.");
             }
         }
 
