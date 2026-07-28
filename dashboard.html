@@ -7,33 +7,76 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    
+    <!-- LIBRERÍA OFICIAL DE GOOGLE -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <style> 
-        body { font-family: 'Inter', sans-serif; }
-        /* Diseño de la barra de desplazamiento de la tabla */
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
         .tabla-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
         .tabla-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .tabla-scroll::-webkit-scrollbar-thumb { background: #c5c5c5; border-radius: 4px; }
         .tabla-scroll::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+        #ssoOverlay { backdrop-filter: blur(8px); }
     </style>
 </head>
-<body class="bg-[#f0f2f5] text-gray-800 min-h-screen p-6">
+<body class="text-gray-800 min-h-screen p-6">
 
-    <div class="max-w-6xl mx-auto">
+    <!-- PANTALLA DE BLOQUEO OFICIAL CON GOOGLE -->
+    <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border-t-4 border-[#1a237e]">
+            <div class="w-16 h-16 bg-[#1a237e] rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg">
+                <i class="fab fa-google"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-1">Universidad ICEL</h2>
+            <p class="text-sm text-gray-500 mb-6">Inicia sesión para continuar al Dashboard</p>
+            
+            <!-- ========================================== -->
+            <!-- AQUÍ VA TU ID DE CLIENTE DE GOOGLE CLOUD   -->
+            <!-- ========================================== -->
+            <div id="g_id_onload"
+                 data-client_id="AQUI_PEGA_TU_ID_DE_CLIENTE.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="validarLoginGoogle"
+                 data-auto_prompt="false">
+            </div>
+            
+            <div class="g_id_signin flex justify-center"
+                 data-type="standard"
+                 data-shape="rectangular"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-size="large"
+                 data-logo_alignment="left">
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DEL DASHBOARD (INICIA OCULTO) -->
+    <div id="mainApp" class="max-w-6xl mx-auto hidden">
         
         <!-- HEADER ADMIN -->
         <header class="flex justify-between items-center mb-8 bg-[#1a237e] p-6 rounded-2xl shadow-lg border border-indigo-900 text-white">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-2xl shadow-inner">
+                <!-- Se mostrará tu foto de perfil de Google -->
+                <img id="perfilGoogle" src="" alt="Perfil" class="w-12 h-12 rounded-full border-2 border-white shadow-inner hidden">
+                <div id="iconoAdmin" class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-2xl shadow-inner">
                     <i class="fas fa-user-tie"></i>
                 </div>
                 <div>
                     <h1 class="text-2xl font-extrabold tracking-tight">Panel de Control IT</h1>
-                    <p class="text-sm text-indigo-200 mt-0.5">Acceso Exclusivo: Administración de Sistemas ICEL</p>
+                    <p class="text-sm text-indigo-200 mt-0.5" id="saludoUsuario">Acceso Exclusivo: Administración de Sistemas ICEL</p>
                 </div>
             </div>
-            <button onclick="cargarDatos()" class="bg-[#00c853] text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-[#00a844] transition-colors flex items-center gap-2 shadow-md">
-                <i class="fas fa-sync-alt" id="iconoSync"></i> Actualizar BD
-            </button>
+            <div class="flex gap-3">
+                <button onclick="cargarDatos()" class="bg-[#00c853] text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-[#00a844] transition-colors flex items-center gap-2 shadow-md">
+                    <i class="fas fa-sync-alt" id="iconoSync"></i> Actualizar BD
+                </button>
+                <button onclick="location.reload()" class="bg-red-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-red-600 transition-colors flex items-center gap-2 shadow-md">
+                    <i class="fas fa-power-off"></i> Salir
+                </button>
+            </div>
         </header>
 
         <!-- TARJETAS DE ESTADÍSTICAS -->
@@ -63,10 +106,9 @@
             </div>
         </div>
 
-        <!-- SECCIÓN DE AUDITORÍA (NUEVO) -->
+        <!-- SECCIÓN DE AUDITORÍA -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
             
-            <!-- Barra de herramientas de la tabla -->
             <div class="p-5 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
                 <h3 class="font-bold text-gray-700 text-lg flex items-center gap-2">
                     <i class="fas fa-database text-indigo-500"></i> Auditoría de Inventario
@@ -96,13 +138,7 @@
                         </tr>
                     </thead>
                     <tbody id="cuerpoTabla" class="divide-y divide-gray-100">
-                        <!-- Aquí se insertan los datos con JavaScript -->
-                        <tr>
-                            <td colspan="5" class="px-6 py-10 text-center text-gray-400 font-medium">
-                                <i class="fas fa-circle-notch fa-spin text-2xl mb-2 text-indigo-500"></i><br>
-                                Conectando con Google Sheets...
-                            </td>
-                        </tr>
+                        <!-- Aquí se insertan los datos -->
                     </tbody>
                 </table>
             </div>
@@ -112,17 +148,54 @@
             </div>
 
         </div>
-
     </div>
 
     <script>
         const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
-        
-        let datosGlobales = []; // Aquí guardaremos la base de datos completa temporalmente
+        let datosGlobales = []; 
 
-        // ¿Para qué funciona?: Descarga toda la información de Google Sheets y llena las tarjetas y la tabla.
+        // ¿Para qué funciona?: Desencripta el token de seguridad que Google te manda tras un login exitoso.
+        function decodificarJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        // ¿Para qué funciona?: Se ejecuta automáticamente cuando te logueas. Valida que seas tú y te da acceso al Dashboard.
+        function validarLoginGoogle(response) {
+            const datosUsuario = decodificarJwtResponse(response.credential);
+            
+            // ==========================================
+            // EL CANDADO: SOLO TÚ PUEDES ENTRAR
+            // ==========================================
+            const correoAutorizado = "urielvazquez@icel.edu.mx"; 
+            
+            if (datosUsuario.email !== correoAutorizado) {
+                alert("Acceso denegado. Esta cuenta no tiene permisos de administrador del sistema.");
+                return;
+            }
+
+            // Si es correcto, ocultamos la pantalla de login y mostramos tu dashboard
+            document.getElementById('ssoOverlay').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            // Ponemos tu foto y tu nombre en el encabezado superior
+            document.getElementById('saludoUsuario').innerText = `Sesión activa: ${datosUsuario.email}`;
+            document.getElementById('perfilGoogle').src = datosUsuario.picture;
+            document.getElementById('perfilGoogle').classList.remove('hidden');
+            document.getElementById('iconoAdmin').classList.add('hidden');
+
+            // Comenzamos a descargar la base de datos automáticamente
+            cargarDatos();
+        }
+
         function cargarDatos() {
             document.getElementById('iconoSync').classList.add('fa-spin');
+            const tbody = document.getElementById('cuerpoTabla');
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-400 font-medium"><i class="fas fa-circle-notch fa-spin text-2xl mb-2 text-indigo-500"></i><br>Conectando con Google Sheets...</td></tr>`;
             
             const payload = { accion: 'leerEquipos' };
             const script = document.createElement('script');
@@ -134,7 +207,7 @@
                 document.getElementById('iconoSync').classList.remove('fa-spin');
                 
                 if (res.success) {
-                    datosGlobales = res.data; // Guardamos los datos para usarlos en el buscador
+                    datosGlobales = res.data; 
                     
                     let piezas = 0;
                     let bodega = 0;
@@ -146,12 +219,10 @@
                         if (ubicacion.includes('bodega') || ubicacion.includes('almacen')) bodega += cantidad;
                     });
 
-                    // Actualizar números
                     document.getElementById('countRegistros').innerText = res.data.length;
                     document.getElementById('countPiezas').innerText = piezas;
                     document.getElementById('countBodega').innerText = bodega;
 
-                    // Dibujar la tabla
                     renderTabla(datosGlobales);
                 } else {
                     alert('Error al leer BD: ' + res.message);
@@ -162,10 +233,9 @@
             document.body.appendChild(script);
         }
 
-        // ¿Para qué funciona?: Toma la lista de equipos y genera el código HTML (las filas <tr>) para mostrarlos en la tabla visualmente.
         function renderTabla(datos) {
             const tbody = document.getElementById('cuerpoTabla');
-            tbody.innerHTML = ''; // Limpiamos la tabla
+            tbody.innerHTML = ''; 
             
             if(datos.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No hay registros que coincidan.</td></tr>`;
@@ -174,7 +244,6 @@
             }
 
             datos.forEach(eq => {
-                // Checar si hay link de foto para poner un botoncito o un guion
                 let botonFoto = eq.foto ? 
                     `<a href="${eq.foto}" target="_blank" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-full inline-flex"><i class="fas fa-image"></i></a>` : 
                     `<span class="text-gray-300">-</span>`;
@@ -198,7 +267,6 @@
             document.getElementById('infoResultados').innerText = `Mostrando ${datos.length} registros`;
         }
 
-        // ¿Para qué funciona?: Lee lo que escribes en la barra de búsqueda y filtra la tabla en tiempo real.
         function filtrarTabla() {
             const textoBuscado = document.getElementById('buscadorTabla').value.toLowerCase();
             
@@ -211,26 +279,20 @@
             renderTabla(datosFiltrados);
         }
 
-        // ¿Para qué funciona?: Convierte los datos que estás viendo en la tabla en un archivo descargable (.csv) para que lo abras en tu propio Excel.
         function exportarCSV() {
             if(datosGlobales.length === 0) {
                 alert("No hay datos para exportar.");
                 return;
             }
             
-            // Creamos los encabezados del archivo
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "INVENTARIO,PIEZAS,DESCRIPCION,UBICACION,FOTO\n";
+            let csvContent = "data:text/csv;charset=utf-8,INVENTARIO,PIEZAS,DESCRIPCION,UBICACION,FOTO\n";
             
-            // Agregamos cada fila
             datosGlobales.forEach(function(eq) {
-                // Limpiamos comas en la descripción para que no rompan el Excel
                 let descLimpia = eq.descripcion.replace(/,/g, " "); 
                 let fila = `${eq.inventario},${eq.piezas},${descLimpia},${eq.ubicacion},${eq.foto}`;
                 csvContent += fila + "\n";
             });
             
-            // Forzamos la descarga del archivo en el navegador
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
@@ -240,8 +302,7 @@
             document.body.removeChild(link);
         }
 
-        // Iniciar
-        window.onload = cargarDatos;
+        // Ya NO usamos window.onload = cargarDatos; porque ahora la carga inicia SOLO cuando el login es válido.
     </script>
 </body>
 </html>
