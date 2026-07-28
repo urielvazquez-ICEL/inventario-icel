@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - ICEL La Villa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style> 
+        body { font-family: 'Inter', sans-serif; }
+        /* Diseño de la barra de desplazamiento de la tabla */
+        .tabla-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+        .tabla-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .tabla-scroll::-webkit-scrollbar-thumb { background: #c5c5c5; border-radius: 4px; }
+        .tabla-scroll::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+    </style>
+</head>
+<body class="bg-[#f0f2f5] text-gray-800 min-h-screen p-6">
+
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- HEADER ADMIN -->
+        <header class="flex justify-between items-center mb-8 bg-[#1a237e] p-6 rounded-2xl shadow-lg border border-indigo-900 text-white">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-2xl shadow-inner">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight">Panel de Control IT</h1>
+                    <p class="text-sm text-indigo-200 mt-0.5">Acceso Exclusivo: Administración de Sistemas ICEL</p>
+                </div>
+            </div>
+            <button onclick="cargarDatos()" class="bg-[#00c853] text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-[#00a844] transition-colors flex items-center gap-2 shadow-md">
+                <i class="fas fa-sync-alt" id="iconoSync"></i> Actualizar BD
+            </button>
+        </header>
+
+        <!-- TARJETAS DE ESTADÍSTICAS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registros (Filas)</p>
+                    <h2 class="text-5xl font-black text-[#1a237e]" id="countRegistros">0</h2>
+                </div>
+                <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-3xl"><i class="fas fa-list"></i></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total de Piezas</p>
+                    <h2 class="text-5xl font-black text-green-500" id="countPiezas">0</h2>
+                </div>
+                <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-3xl"><i class="fas fa-boxes"></i></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">En Bodega</p>
+                    <h2 class="text-5xl font-black text-orange-500" id="countBodega">0</h2>
+                </div>
+                <div class="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 text-3xl"><i class="fas fa-door-closed"></i></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DE AUDITORÍA (NUEVO) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+            
+            <!-- Barra de herramientas de la tabla -->
+            <div class="p-5 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h3 class="font-bold text-gray-700 text-lg flex items-center gap-2">
+                    <i class="fas fa-database text-indigo-500"></i> Auditoría de Inventario
+                </h3>
+                
+                <div class="flex w-full md:w-auto gap-3">
+                    <div class="relative w-full md:w-72">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="buscadorTabla" onkeyup="filtrarTabla()" placeholder="Buscar etiqueta, modelo, ubicación..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                    </div>
+                    <button onclick="exportarCSV()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-file-download"></i> <span class="hidden sm:inline">Exportar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de Datos -->
+            <div class="overflow-x-auto tabla-scroll max-h-[500px]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-white sticky top-0 shadow-sm z-10">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">Inventario ID</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b text-center">Piezas</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b w-1/2">Descripción</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">Ubicación</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b text-center">Foto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla" class="divide-y divide-gray-100">
+                        <!-- Aquí se insertan los datos con JavaScript -->
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-400 font-medium">
+                                <i class="fas fa-circle-notch fa-spin text-2xl mb-2 text-indigo-500"></i><br>
+                                Conectando con Google Sheets...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="p-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 text-right" id="infoResultados">
+                Mostrando 0 registros
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
+        
+        let datosGlobales = []; // Aquí guardaremos la base de datos completa temporalmente
+
+        // ¿Para qué funciona?: Descarga toda la información de Google Sheets y llena las tarjetas y la tabla.
+        function cargarDatos() {
+            document.getElementById('iconoSync').classList.add('fa-spin');
+            
+            const payload = { accion: 'leerEquipos' };
+            const script = document.createElement('script');
+            const callbackName = 'callback_dashboard_' + Date.now();
+            
+            window[callbackName] = function(res) {
+                delete window[callbackName]; 
+                document.body.removeChild(script);
+                document.getElementById('iconoSync').classList.remove('fa-spin');
+                
+                if (res.success) {
+                    datosGlobales = res.data; // Guardamos los datos para usarlos en el buscador
+                    
+                    let piezas = 0;
+                    let bodega = 0;
+
+                    res.data.forEach(eq => {
+                        let cantidad = parseInt(eq.piezas) || 1;
+                        piezas += cantidad;
+                        let ubicacion = (eq.ubicacion || '').toLowerCase();
+                        if (ubicacion.includes('bodega') || ubicacion.includes('almacen')) bodega += cantidad;
+                    });
+
+                    // Actualizar números
+                    document.getElementById('countRegistros').innerText = res.data.length;
+                    document.getElementById('countPiezas').innerText = piezas;
+                    document.getElementById('countBodega').innerText = bodega;
+
+                    // Dibujar la tabla
+                    renderTabla(datosGlobales);
+                } else {
+                    alert('Error al leer BD: ' + res.message);
+                }
+            };
+            
+            script.src = URL_API + '?callback=' + callbackName + '&data=' + encodeURIComponent(JSON.stringify(payload));
+            document.body.appendChild(script);
+        }
+
+        // ¿Para qué funciona?: Toma la lista de equipos y genera el código HTML (las filas <tr>) para mostrarlos en la tabla visualmente.
+        function renderTabla(datos) {
+            const tbody = document.getElementById('cuerpoTabla');
+            tbody.innerHTML = ''; // Limpiamos la tabla
+            
+            if(datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No hay registros que coincidan.</td></tr>`;
+                document.getElementById('infoResultados').innerText = `Mostrando 0 registros`;
+                return;
+            }
+
+            datos.forEach(eq => {
+                // Checar si hay link de foto para poner un botoncito o un guion
+                let botonFoto = eq.foto ? 
+                    `<a href="${eq.foto}" target="_blank" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-full inline-flex"><i class="fas fa-image"></i></a>` : 
+                    `<span class="text-gray-300">-</span>`;
+
+                let fila = `
+                    <tr class="hover:bg-indigo-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-700">${eq.inventario}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center font-medium">${eq.piezas}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${eq.descripcion}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                ${eq.ubicacion}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">${botonFoto}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += fila;
+            });
+            
+            document.getElementById('infoResultados').innerText = `Mostrando ${datos.length} registros`;
+        }
+
+        // ¿Para qué funciona?: Lee lo que escribes en la barra de búsqueda y filtra la tabla en tiempo real.
+        function filtrarTabla() {
+            const textoBuscado = document.getElementById('buscadorTabla').value.toLowerCase();
+            
+            const datosFiltrados = datosGlobales.filter(eq => {
+                return eq.inventario.toLowerCase().includes(textoBuscado) ||
+                       eq.descripcion.toLowerCase().includes(textoBuscado) ||
+                       eq.ubicacion.toLowerCase().includes(textoBuscado);
+            });
+            
+            renderTabla(datosFiltrados);
+        }
+
+        // ¿Para qué funciona?: Convierte los datos que estás viendo en la tabla en un archivo descargable (.csv) para que lo abras en tu propio Excel.
+        function exportarCSV() {
+            if(datosGlobales.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+            
+            // Creamos los encabezados del archivo
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "INVENTARIO,PIEZAS,DESCRIPCION,UBICACION,FOTO\n";
+            
+            // Agregamos cada fila
+            datosGlobales.forEach(function(eq) {
+                // Limpiamos comas en la descripción para que no rompan el Excel
+                let descLimpia = eq.descripcion.replace(/,/g, " "); 
+                let fila = `${eq.inventario},${eq.piezas},${descLimpia},${eq.ubicacion},${eq.foto}`;
+                csvContent += fila + "\n";
+            });
+            
+            // Forzamos la descarga del archivo en el navegador
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Reporte_Inventario_ICEL.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Iniciar
+        window.onload = cargarDatos;
+    </script>
+</body>
+</html>

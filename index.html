@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Equipos - ICEL La Villa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .input-field {
+            width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 14px; outline: none; transition: all 0.2s; background: #ffffff;
+        }
+        .input-field:focus { border-color: #1a237e; box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1); }
+        .input-label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 4px; text-transform: uppercase;}
+        #ssoOverlay { backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- SSO LOGIN -->
+    <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/80 z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+            <div class="w-16 h-16 bg-[#1a237e] rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">Acceso a Inventario</h2>
+            <form id="formLogin" class="space-y-4 mt-6">
+                <input type="text" id="loginNombre" required placeholder="Tu Nombre" class="input-field text-center font-medium">
+                <input type="password" id="loginPin" required placeholder="PIN" class="input-field text-center tracking-[0.5em] font-bold">
+                <button type="submit" class="w-full bg-[#00c853] hover:bg-[#00a844] text-white font-bold py-3 rounded-lg shadow-md">ENTRAR</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hidden">
+        <div class="bg-[#1a237e] p-6 text-white">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Inventario Sistemas - Corporativo</h2>
+                <button onclick="location.reload()" class="text-indigo-200 hover:text-white text-sm"><i class="fas fa-sign-out-alt"></i> Salir</button>
+            </div>
+            <div class="flex gap-2 bg-indigo-900/50 p-2 rounded-lg border border-indigo-500/30">
+                <input type="text" id="searchId" onblur="autobuscar()" placeholder="Buscar por INVENTARIO (Ej. LVI-001)" class="w-full bg-transparent border-none text-white outline-none px-2 uppercase">
+                <button onclick="buscarEquipo()" class="bg-[#00c853] px-4 py-2 rounded-md font-semibold text-sm flex items-center gap-2"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+            <p id="searchMsg" class="text-xs mt-2 font-medium h-4"></p>
+        </div>
+
+        <form id="formEquipo" class="p-6 space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="input-label">1. INVENTARIO (Etiqueta/ID) *</label>
+                    <input type="text" id="eqInventario" required class="input-field font-mono font-bold bg-gray-50 uppercase" readonly>
+                </div>
+                <div>
+                    <label class="input-label">2. PIEZAS *</label>
+                    <input type="number" id="eqPiezas" required min="1" value="1" class="input-field">
+                </div>
+            </div>
+
+            <div>
+                <label class="input-label">3. DESCRIPCIÓN ESPECÍFICA *</label>
+                <textarea id="eqDescripcion" required rows="3" placeholder="Ej. PC Dell Optiplex..." class="input-field resize-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="input-label">4. UBICACIÓN *</label>
+                    <input type="text" id="eqUbicacion" required placeholder="Ej. Laboratorio 1, Bodega..." class="input-field">
+                </div>
+                
+                <!-- BOTÓN DE CÁMARA (NUEVO) -->
+                <div>
+                    <label class="input-label">5. EVIDENCIA FOTOGRÁFICA</label>
+                    <div class="flex items-center gap-3 mt-1">
+                        <label class="flex-1 cursor-pointer bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-center py-2.5 rounded-lg text-sm font-semibold transition-colors">
+                            <i class="fas fa-camera"></i> Tomar Foto
+                            <!-- capture="environment" abre la cámara trasera en el cel -->
+                            <input type="file" id="eqFotoFile" accept="image/*" capture="environment" class="hidden" onchange="procesarFoto(event)">
+                        </label>
+                        
+                        <!-- Aquí se muestra la miniatura de la foto -->
+                        <div id="cajaMiniatura" class="hidden w-11 h-11 rounded-lg border-2 border-gray-300 relative">
+                            <img id="imgMiniatura" class="w-full h-full object-cover rounded-md">
+                            <button type="button" onclick="quitarFoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <div class="flex justify-between items-center pt-2">
+                <button type="button" onclick="resetFormulario()" class="text-gray-500 hover:text-gray-800 text-sm font-semibold"><i class="fas fa-undo"></i> Limpiar</button>
+                <button type="submit" id="btnGuardar" class="bg-[#1a237e] text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-md flex items-center gap-2" disabled>
+                    <i class="fas fa-save"></i> <span>Esperando búsqueda...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const PIN_ACCESO = "1234";
+        // ¡REEMPLAZA AQUÍ CON TU NUEVA URL DE IMPLEMENTACIÓN!
+        const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
+
+        let modoEdicion = false;
+        let fotoDataFinal = ""; // Variable para guardar la foto comprimida
+
+        document.getElementById('formLogin').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (document.getElementById('loginPin').value === PIN_ACCESO) {
+                document.getElementById('ssoOverlay').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('searchId').focus();
+            } else alert("PIN Incorrecto");
+        });
+
+        // ¿Para qué funciona?: Toma la foto de 5MB del celular, dibuja una copia pequeña (máximo 800px) en un lienzo invisible, y la convierte en texto (Base64) para poder enviarla por internet sin saturar la base de datos.
+        function procesarFoto(event) {
+            const archivo = event.target.files[0];
+            if(!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Ancho máximo
+                    const proporcion = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * proporcion;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Comprime al 70% de calidad en JPG
+                    fotoDataFinal = canvas.toDataURL('image/jpeg', 0.7); 
+
+                    // Mostramos la miniatura
+                    document.getElementById('imgMiniatura').src = fotoDataFinal;
+                    document.getElementById('cajaMiniatura').classList.remove('hidden');
+                }
+                img.src = e.target.result;
+            }
+            lector.readAsDataURL(archivo);
+        }
+
+        // Elimina la foto si se equivocaron
+        function quitarFoto() {
+            fotoDataFinal = "";
+            document.getElementById('eqFotoFile').value = "";
+            document.getElementById('cajaMiniatura').classList.add('hidden');
+        }
+
+        function autobuscar() {
+            let valorActual = document.getElementById('searchId').value.trim().toUpperCase();
+            let valorInput = document.getElementById('eqInventario').value.trim().toUpperCase();
+            if(valorActual && valorActual !== valorInput) buscarEquipo();
+        }
+
+        function buscarEquipo() {
+            let idBuscado = document.getElementById('searchId').value.trim().toUpperCase();
+            if (!idBuscado) return;
+            const btn = document.getElementById('btnGuardar');
+            
+            document.getElementById('searchMsg').innerHTML = `<span class="text-blue-400">Verificando en base de datos...</span>`;
+            
+            const payload = { accion: 'leerEquipos' };
+            const script = document.createElement('script');
+            const callbackName = 'callback_leer_' + Date.now();
+            
+            window[callbackName] = function(res) {
+                delete window[callbackName]; document.body.removeChild(script);
+                if (res.success) {
+                    const equipo = res.data.find(eq => eq.inventario.toUpperCase() === idBuscado);
+                    document.getElementById('eqInventario').value = idBuscado;
+
+                    if (equipo) {
+                        modoEdicion = true;
+                        document.getElementById('searchMsg').innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle"></i> Localizado. Sube foto para actualizarla.</span>`;
+                        document.getElementById('eqPiezas').value = equipo.piezas || '1';
+                        document.getElementById('eqDescripcion').value = equipo.descripcion || '';
+                        document.getElementById('eqUbicacion').value = equipo.ubicacion || '';
+                        btn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Actualizar</span>';
+                    } else {
+                        modoEdicion = false;
+                        document.getElementById('searchMsg').innerHTML = `<span class="text-orange-400"><i class="fas fa-plus-circle"></i> Registro Nuevo.</span>`;
+                        document.getElementById('eqPiezas').value = '1';
+                        document.getElementById('eqDescripcion').value = '';
+                        document.getElementById('eqUbicacion').value = '';
+                        btn.innerHTML = '<i class="fas fa-save"></i> <span>Registrar</span>';
+                    }
+                    quitarFoto(); // Limpiar la foto anterior de la pantalla
+                    btn.disabled = false;
+                }
+            };
+            script.src = URL_API + '?callback=' + callbackName + '&data=' + encodeURIComponent(JSON.stringify(payload));
+            document.body.appendChild(script);
+        }
+
+        document.getElementById('searchId').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') buscarEquipo();
+        });
+
+        // NUEVO SISTEMA DE ENVÍO DE DATOS (POST) PARA SOPORTAR IMÁGENES
+        document.getElementById('formEquipo').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnGuardar');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Subiendo foto y guardando...</span>';
+            btn.disabled = true;
+
+            const payload = {
+                accion: modoEdicion ? 'editarEquipo' : 'agregarEquipo',
+                inventario: document.getElementById('eqInventario').value.trim().toUpperCase(),
+                piezas: document.getElementById('eqPiezas').value,
+                descripcion: document.getElementById('eqDescripcion').value.trim(),
+                ubicacion: document.getElementById('eqUbicacion').value.trim(),
+                fotoBase64: fotoDataFinal // Se manda todo el texto de la imagen comprimida
+            };
+
+            // Usamos Fetch POST en vez de JSONP para poder enviar el peso de la imagen
+            fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            })
+            .then(response => response.json())
+            .then(res => {
+                if (res.success) {
+                    alert('✅ Datos y evidencia guardados correctamente.');
+                    resetFormulario();
+                } else {
+                    alert('❌ Error de servidor: ' + res.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> <span>Reintentar</span>';
+                }
+            })
+            .catch(error => {
+                alert('❌ Error de red, revisa tu conexión.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> <span>Reintentar</span>';
+            });
+        });
+
+        function resetFormulario() {
+            document.getElementById('formEquipo').reset();
+            quitarFoto();
+            document.getElementById('searchId').value = "";
+            document.getElementById('searchMsg').innerHTML = "";
+            const btn = document.getElementById('btnGuardar');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-save"></i> <span>Esperando búsqueda...</span>';
+            document.getElementById('searchId').focus();
+        }
+    </script>
+</body>
+</html>
