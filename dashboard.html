@@ -1,308 +1,1327 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- LIBRERÍA DE GOOGLE SSO -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - ICEL La Villa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Inventory Hub - Gestión de Inventarios</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     
-    <!-- LIBRERÍA OFICIAL DE GOOGLE -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <style> 
-        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
-        .tabla-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
-        .tabla-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        .tabla-scroll::-webkit-scrollbar-thumb { background: #c5c5c5; border-radius: 4px; }
-        .tabla-scroll::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
-        #ssoOverlay { backdrop-filter: blur(8px); }
+    <style>
+        /* ==================== RESET Y BASE ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #80a1d3;
+            color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 1400px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==================== SSO LOGIN ESTILOS (NUEVO) ==================== */
+        .sso-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(26, 35, 126, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .sso-overlay.hidden { display: none !important; }
+        .login-card {
+            background: white; padding: 40px; border-radius: 24px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.3); text-align: center;
+            max-width: 420px; width: 100%;
+            border-top: 6px solid #00c853;
+            animation: fadeIn 0.4s ease;
+        }
+        .login-card h2 { font-size: 24px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+        .login-card p { color: #6b6b8a; font-size: 14px; margin-bottom: 28px; }
+        .app-container.hidden { display: none; }
+
+        /* ==================== HEADER ==================== */
+        .top-bar {
+            background: #1a237e;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: #00c853;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            font-weight: 800;
+        }
+        .logo-text { color: white; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+        .logo-text span { font-weight: 300; color: #90caf9; }
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+        }
+        .user-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #3949ab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            overflow: hidden; /* Agregado para que la foto de Google encaje perfecto */
+        }
+        .user-name { font-size: 14px; font-weight: 500; }
+        .user-email { font-size: 12px; opacity: 0.7; }
+        .btn-outline {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.25); }
+
+        /* ==================== NAVEGACIÓN ==================== */
+        .nav-bar {
+            background: #f8f9fa;
+            padding: 0 32px;
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        .nav-item {
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5c5c7a;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .nav-item:hover { color: #1a237e; background: #e8eaf6; border-radius: 8px 8px 0 0; }
+        .nav-item.active {
+            color: #1a237e;
+            border-bottom-color: #1a237e;
+            background: #e8eaf6;
+            border-radius: 8px 8px 0 0;
+        }
+        .nav-item i { font-size: 16px; }
+        .badge {
+            background: #1a237e;
+            color: white;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* ==================== CONTENIDO ==================== */
+        .content { flex: 1; padding: 32px; overflow-y: auto; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page-title { font-size: 28px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .page-subtitle { color: #6b6b8a; font-size: 15px; margin-bottom: 28px; }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* ==================== TARJETAS DE ESTADÍSTICAS ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #eef0f4;
+            transition: all 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .stat-number { font-size: 32px; font-weight: 800; color: #1a237e; line-height: 1.2; }
+        .stat-label { font-size: 13px; color: #6b6b8a; font-weight: 500; margin-top: 4px; }
+        .stat-icon { float: right; font-size: 28px; color: #c5cae9; }
+        .stat-card.green .stat-number { color: #00c853; }
+        .stat-card.orange .stat-number { color: #ff9800; }
+        .stat-card.red .stat-number { color: #d32f2f; }
+        .stat-card.blue .stat-number { color: #1a237e; }
+
+        /* ==================== TABLAS ==================== */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef0f4;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .table-header {
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-bottom: 1px solid #eef0f4;
+        }
+        .table-header h3 { font-size: 17px; font-weight: 600; }
+        .table-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-input {
+            padding: 8px 14px;
+            border: 1px solid #d0d4e0;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+            min-width: 200px;
+            background: #f8f9fa;
+            transition: all 0.2s;
+        }
+        .search-input:focus {
+            border-color: #1a237e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26,35,126,0.1);
+        }
+        .table-scroll { overflow-x: auto; padding: 0 24px 24px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        thead { background: #f8f9fa; }
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            font-weight: 600;
+            color: #3d3d5c;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #eef0f4;
+        }
+        td { padding: 14px 16px; border-bottom: 1px solid #f0f2f5; color: #2d2d4a; }
+        tr:hover td { background: #f8f9fe; }
+
+        /* ==================== BADGES DE ESTADO ==================== */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-operativa { background: #e8f5e9; color: #2e7d32; }
+        .status-mantenimiento { background: #fff3e0; color: #e65100; }
+        .status-baja { background: #fbe9e7; color: #c62828; }
+        .status-activo { background: #e3f2fd; color: #0d47a1; }
+        .status-inactivo { background: #f5f5f5; color: #616161; }
+
+        /* ==================== BOTONES ==================== */
+        .btn-primary {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary:hover { background: #0d1559; transform: scale(1.02); }
+        .btn-success { background: #00c853; }
+        .btn-success:hover { background: #00a844; }
+        .btn-secondary {
+            background: #eef0f4;
+            color: #3d3d5c;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-secondary:hover { background: #d5d9e2; }
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            color: #6b6b8a;
+        }
+        .action-btn:hover { background: #eef0f4; }
+        .action-btn.edit:hover { color: #1a237e; }
+        .action-btn.delete:hover { color: #d32f2f; }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 24px;
+            max-width: 560px;
+            width: 100%;
+            padding: 32px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+            animation: modalIn 0.25s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .modal-header h3 { font-size: 20px; font-weight: 700; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #1a1a2e; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #3d3d5c;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d0d4e0;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #1a237e;
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26,35,126,0.1);
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+        .modal-actions .btn-primary { padding: 10px 28px; }
+
+        /* ==================== LOADING ==================== */
+        .loading { text-align: center; padding: 40px; color: #6b6b8a; }
+        .loading i { font-size: 40px; color: #1a237e; margin-bottom: 12px; display: block; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .top-bar { padding: 12px 16px; }
+            .logo-text { font-size: 17px; }
+            .nav-bar { padding: 0 12px; gap: 0; overflow-x: auto; flex-wrap: nowrap; }
+            .nav-item { padding: 12px 14px; font-size: 13px; white-space: nowrap; }
+            .nav-item span { display: none; }
+            .content { padding: 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat-number { font-size: 24px; }
+            .table-header { flex-direction: column; align-items: stretch; }
+            .search-input { min-width: 100%; }
+            .form-row { grid-template-columns: 1fr; }
+            .modal { padding: 20px; margin: 10px; }
+            .user-name, .user-email { display: none; }
+            .page-title { font-size: 22px; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-card { padding: 14px 16px; }
+            .stat-number { font-size: 20px; }
+        }
     </style>
 </head>
-<body class="text-gray-800 min-h-screen p-6">
+<body>
 
-    <!-- PANTALLA DE BLOQUEO OFICIAL CON GOOGLE -->
-    <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border-t-4 border-[#1a237e]">
-            <div class="w-16 h-16 bg-[#1a237e] rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg">
-                <i class="fab fa-google"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-800 mb-1">Universidad ICEL</h2>
-            <p class="text-sm text-gray-500 mb-6">Inicia sesión para continuar al Dashboard</p>
-            
-            <!-- ========================================== -->
-            <!-- AQUÍ VA TU ID DE CLIENTE DE GOOGLE CLOUD   -->
-            <!-- ========================================== -->
-            <div id="g_id_onload"
-                 data-client_id="41940845604-c5ag9q0mqhbla0ubhu40akok5euklh33.apps.googleusercontent.com"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-callback="validarLoginGoogle"
-                 data-auto_prompt="false">
-            </div>
-            
-            <div class="g_id_signin flex justify-center"
-                 data-type="standard"
-                 data-shape="rectangular"
-                 data-theme="outline"
-                 data-text="signin_with"
-                 data-size="large"
-                 data-logo_alignment="left">
-            </div>
-        </div>
-    </div>
-
-    <!-- CONTENEDOR PRINCIPAL DEL DASHBOARD (INICIA OCULTO) -->
-    <div id="mainApp" class="max-w-6xl mx-auto hidden">
+<!-- ==================== PANTALLA DE BLOQUEO (SSO GOOGLE) ==================== -->
+<div id="ssoOverlay" class="sso-overlay">
+    <div class="login-card">
+        <div class="logo-icon" style="margin: 0 auto 16px; width: 60px; height: 60px; font-size: 28px;">IH</div>
+        <h2>Inventory Hub</h2>
+        <p>Inicia sesión con tu cuenta autorizada para acceder a la administración del sistema.</p>
         
-        <!-- HEADER ADMIN -->
-        <header class="flex justify-between items-center mb-8 bg-[#1a237e] p-6 rounded-2xl shadow-lg border border-indigo-900 text-white">
-            <div class="flex items-center gap-4">
-                <!-- Se mostrará tu foto de perfil de Google -->
-                <img id="perfilGoogle" src="" alt="Perfil" class="w-12 h-12 rounded-full border-2 border-white shadow-inner hidden">
-                <div id="iconoAdmin" class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-2xl shadow-inner">
-                    <i class="fas fa-user-tie"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-extrabold tracking-tight">Panel de Control IT</h1>
-                    <p class="text-sm text-indigo-200 mt-0.5" id="saludoUsuario">Acceso Exclusivo: Administración de Sistemas ICEL</p>
-                </div>
+        <div id="g_id_onload"
+             data-client_id="41940845604-c5ag9q0mqhbla0ubhu40akok5euklh33.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="validarLogin"
+             data-auto_prompt="false">
+        </div>
+        
+        <div class="g_id_signin" style="display: flex; justify-content: center;" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="center"></div>
+    </div>
+</div>
+
+<!-- ==================== CONTENEDOR PRINCIPAL (INICIA OCULTO) ==================== -->
+<div class="app-container hidden" id="mainApp">
+    <!-- ==================== HEADER ==================== -->
+    <header class="top-bar">
+        <div class="logo-area">
+            <div class="logo-icon">IH</div>
+            <div class="logo-text">Inventory<span>Hub</span></div>
+        </div>
+        <div class="user-area">
+            <div>
+                <div class="user-name" id="userName">Administrador</div>
+                <div class="user-email" id="userEmail">admin@ejemplo.com</div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="cargarDatos()" class="bg-[#00c853] text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-[#00a844] transition-colors flex items-center gap-2 shadow-md">
-                    <i class="fas fa-sync-alt" id="iconoSync"></i> Actualizar BD
+            <!-- Aquí se inyectará la foto de perfil de Google -->
+            <div class="user-avatar" id="userAvatar">AD</div>
+            <button class="btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+        </div>
+    </header>
+
+    <!-- ==================== NAVEGACIÓN ==================== -->
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('dashboard')">
+            <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('computadoras')">
+            <i class="fas fa-laptop"></i> <span>Computadoras</span>
+            <span class="badge" id="badgeComputadoras">0</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('laboratorios')">
+            <i class="fas fa-flask"></i> <span>Laboratorios</span>
+            <span class="badge" id="badgeLaboratorios">0</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('historial')">
+            <i class="fas fa-history"></i> <span>Historial</span>
+        </button>
+    </nav>
+
+    <!-- ==================== CONTENIDO ==================== -->
+    <div class="content">
+        <!-- ===== DASHBOARD ===== -->
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="section-header">
+                <div>
+                    <div class="page-title">📊 Dashboard</div>
+                    <div class="page-subtitle">Resumen general de tu inventario</div>
+                </div>
+                <button class="btn-primary" onclick="cargarDatos()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
                 </button>
-                <button onclick="location.reload()" class="bg-red-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-red-600 transition-colors flex items-center gap-2 shadow-md">
-                    <i class="fas fa-power-off"></i> Salir
-                </button>
-            </div>
-        </header>
-
-        <!-- TARJETAS DE ESTADÍSTICAS -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registros (Filas)</p>
-                    <h2 class="text-5xl font-black text-[#1a237e]" id="countRegistros">0</h2>
-                </div>
-                <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-3xl"><i class="fas fa-list"></i></div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total de Piezas</p>
-                    <h2 class="text-5xl font-black text-green-500" id="countPiezas">0</h2>
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <i class="fas fa-laptop stat-icon"></i>
+                    <div class="stat-number" id="totalEquipos">0</div>
+                    <div class="stat-label">Total de equipos</div>
                 </div>
-                <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-3xl"><i class="fas fa-boxes"></i></div>
+                <div class="stat-card green">
+                    <i class="fas fa-check-circle stat-icon"></i>
+                    <div class="stat-number" id="totalOperativos">0</div>
+                    <div class="stat-label">Equipos operativos</div>
+                </div>
+                <div class="stat-card orange">
+                    <i class="fas fa-tools stat-icon"></i>
+                    <div class="stat-number" id="totalMantenimiento">0</div>
+                    <div class="stat-label">En mantenimiento</div>
+                </div>
+                <div class="stat-card blue">
+                    <i class="fas fa-flask stat-icon"></i>
+                    <div class="stat-number" id="totalLabs">0</div>
+                    <div class="stat-label">Laboratorios</div>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">En Bodega</p>
-                    <h2 class="text-5xl font-black text-orange-500" id="countBodega">0</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                <div class="table-container">
+                    <div class="table-header"><h3>🖥️ Últimos equipos</h3></div>
+                    <div class="table-scroll" id="ultimosEquipos">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i>Cargando...</div>
+                    </div>
                 </div>
-                <div class="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 text-3xl"><i class="fas fa-door-closed"></i></div>
+                <div class="table-container">
+                    <div class="table-header"><h3>🧪 Laboratorios activos</h3></div>
+                    <div class="table-scroll" id="ultimosLabs">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i>Cargando...</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- SECCIÓN DE AUDITORÍA -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-            
-            <div class="p-5 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                <h3 class="font-bold text-gray-700 text-lg flex items-center gap-2">
-                    <i class="fas fa-database text-indigo-500"></i> Auditoría de Inventario
-                </h3>
-                
-                <div class="flex w-full md:w-auto gap-3">
-                    <div class="relative w-full md:w-72">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" id="buscadorTabla" onkeyup="filtrarTabla()" placeholder="Buscar etiqueta, modelo, ubicación..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+        <!-- ===== COMPUTADORAS ===== -->
+        <div id="tab-computadoras" class="tab-content">
+            <div class="section-header">
+                <div>
+                    <div class="page-title">💻 Computadoras</div>
+                    <div class="page-subtitle">Inventario completo de equipos de cómputo</div>
+                </div>
+                <button class="btn-primary" onclick="openModal('computadora')">
+                    <i class="fas fa-plus"></i> Agregar equipo
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Lista de equipos</h3>
+                    <div class="table-controls">
+                        <input type="text" class="search-input" id="searchComputadora" placeholder="🔍 Buscar equipo..." oninput="filtrarComputadoras()">
+                        <select class="search-input" id="filterComputadora" style="min-width:130px;" onchange="filtrarComputadoras()">
+                            <option value="">Todos los estados</option>
+                            <option value="Operativa">Operativa</option>
+                            <option value="Mantenimiento">Mantenimiento</option>
+                            <option value="Baja">Baja</option>
+                        </select>
                     </div>
-                    <button onclick="exportarCSV()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap">
-                        <i class="fas fa-file-download"></i> <span class="hidden sm:inline">Exportar</span>
-                    </button>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>RAM</th>
+                                <th>Estado</th>
+                                <th>Ubicación</th>
+                                <th style="text-align:center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaComputadoras">
+                            <tr><td colspan="8" style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
 
-            <!-- Tabla de Datos -->
-            <div class="overflow-x-auto tabla-scroll max-h-[500px]">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-white sticky top-0 shadow-sm z-10">
-                        <tr>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">Inventario ID</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b text-center">Piezas</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b w-1/2">Descripción</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">Ubicación</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b text-center">Foto</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoTabla" class="divide-y divide-gray-100">
-                        <!-- Aquí se insertan los datos -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="p-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 text-right" id="infoResultados">
-                Mostrando 0 registros
+        <!-- ===== LABORATORIOS ===== -->
+        <div id="tab-laboratorios" class="tab-content">
+            <div class="section-header">
+                <div>
+                    <div class="page-title">🧪 Laboratorios</div>
+                    <div class="page-subtitle">Gestión de laboratorios y sus equipos</div>
+                </div>
+                <button class="btn-primary" onclick="openModal('laboratorio')">
+                    <i class="fas fa-plus"></i> Agregar laboratorio
+                </button>
             </div>
 
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Lista de laboratorios</h3>
+                    <div class="table-controls">
+                        <input type="text" class="search-input" id="searchLaboratorio" placeholder="🔍 Buscar laboratorio..." oninput="filtrarLaboratorios()">
+                    </div>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Ubicación</th>
+                                <th>Capacidad</th>
+                                <th>Equipos</th>
+                                <th>Encargado</th>
+                                <th>Estado</th>
+                                <th style="text-align:center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaLaboratorios">
+                            <tr><td colspan="8" style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== HISTORIAL ===== -->
+        <div id="tab-historial" class="tab-content">
+            <div>
+                <div class="page-title">📜 Historial de movimientos</div>
+                <div class="page-subtitle">Registro de todas las acciones realizadas en el inventario</div>
+            </div>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Registro de actividades</h3>
+                    <div class="table-controls">
+                        <input type="text" class="search-input" id="searchHistorial" placeholder="🔍 Buscar...">
+                    </div>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                                <th>Elemento</th>
+                                <th>Responsable</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaHistorial">
+                            <tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">No hay registros aún</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
-        let datosGlobales = []; 
+    <!-- ==================== MODAL ==================== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Agregar equipo</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="modalForm">
+                <div id="modalFields">
+                    <!-- Campos para Computadora -->
+                    <div id="fieldsComputadora">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>ID del equipo *</label>
+                                <input type="text" id="compId" placeholder="Ej: PC-007" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre *</label>
+                                <input type="text" id="compNombre" placeholder="Ej: Laptop Dell" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Marca</label>
+                                <input type="text" id="compMarca" placeholder="Ej: Dell, HP, Lenovo">
+                            </div>
+                            <div class="form-group">
+                                <label>Modelo</label>
+                                <input type="text" id="compModelo" placeholder="Ej: Latitude 5420">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>RAM</label>
+                                <input type="text" id="compRam" placeholder="Ej: 16GB, 32GB">
+                            </div>
+                            <div class="form-group">
+                                <label>Estado *</label>
+                                <select id="compEstado">
+                                    <option>Operativa</option>
+                                    <option>Mantenimiento</option>
+                                    <option>Baja</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Ubicación *</label>
+                            <input type="text" id="compUbicacion" placeholder="Ej: Lab 1, Almacén" required>
+                        </div>
+                    </div>
 
-        // ¿Para qué funciona?: Desencripta el token de seguridad que Google te manda tras un login exitoso.
-        function decodificarJwtResponse(token) {
-            let base64Url = token.split('.')[1];
-            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
+                    <!-- Campos para Laboratorio -->
+                    <div id="fieldsLaboratorio" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>ID del laboratorio *</label>
+                                <input type="text" id="labId" placeholder="Ej: LAB-005" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre *</label>
+                                <input type="text" id="labNombre" placeholder="Ej: Laboratorio de IA" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Ubicación</label>
+                                <input type="text" id="labUbicacion" placeholder="Ej: Edificio D - Piso 1">
+                            </div>
+                            <div class="form-group">
+                                <label>Capacidad (personas)</label>
+                                <input type="number" id="labCapacidad" placeholder="Ej: 30">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Cantidad de equipos</label>
+                                <input type="number" id="labEquipos" placeholder="Ej: 15">
+                            </div>
+                            <div class="form-group">
+                                <label>Encargado</label>
+                                <input type="text" id="labEncargado" placeholder="Ej: Ing. Pérez">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado *</label>
+                            <select id="labEstado">
+                                <option>Activo</option>
+                                <option>Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="button" class="btn-primary" id="btnGuardar"><i class="fas fa-save"></i> Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-        // ¿Para qué funciona?: Se ejecuta automáticamente cuando te logueas. Valida que seas tú y te da acceso al Dashboard.
-        function validarLoginGoogle(response) {
-            const datosUsuario = decodificarJwtResponse(response.credential);
-            
-            // ==========================================
-            // EL CANDADO: SOLO TÚ PUEDES ENTRAR
-            // ==========================================
-            const correoAutorizado = "urielvazquez@icel.edu.mx"; 
-            
-            if (datosUsuario.email !== correoAutorizado) {
-                alert("Acceso denegado. Esta cuenta no tiene permisos de administrador del sistema.");
-                return;
-            }
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+    // ============================================
+    // GOOGLE SSO & AUTENTICACIÓN (NUEVO)
+    // ============================================
+    
+    // ¿Para qué funciona?: Desencripta el token de Google para sacar nombre, correo y foto.
+    function decodificarJwtResponse(token) {
+        let base64Url = token.split('.')[1];
+        let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    }
 
-            // Si es correcto, ocultamos la pantalla de login y mostramos tu dashboard
+    // ¿Para qué funciona?: Verifica tu lista y deja pasar si el correo está autorizado.
+    function validarLogin(response) {
+        const datosUsuario = decodificarJwtResponse(response.credential);
+        const correoUsuario = datosUsuario.email.toLowerCase();
+
+        // Lista de administradores o chicos permitidos para este módulo
+        const usuariosPermitidos = [
+            "urielvazquez@icel.edu.mx",
+            "000078438@alumnos.icel.edu.mx",
+            "000011454@alumnos.icel.edu.mx",
+            "000075968@alumnos.icel.edu.mx",
+            "000072748@alumnos.icel.edu.mx"
+        ];
+        
+        if (usuariosPermitidos.includes(correoUsuario)) {
+            // 1. Ocultar pantalla de bloqueo y mostrar sistema
             document.getElementById('ssoOverlay').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            
-            // Ponemos tu foto y tu nombre en el encabezado superior
-            document.getElementById('saludoUsuario').innerText = `Sesión activa: ${datosUsuario.email}`;
-            document.getElementById('perfilGoogle').src = datosUsuario.picture;
-            document.getElementById('perfilGoogle').classList.remove('hidden');
-            document.getElementById('iconoAdmin').classList.add('hidden');
 
-            // Comenzamos a descargar la base de datos automáticamente
+            // 2. Insertar tus datos reales de Google en el Header del sistema
+            document.getElementById('userName').textContent = datosUsuario.name;
+            document.getElementById('userEmail').textContent = datosUsuario.email;
+            
+            // Inyectamos la foto de Google en lugar de las iniciales que tenías
+            document.getElementById('userAvatar').innerHTML = `<img src="${datosUsuario.picture}" alt="Perfil" style="width:100%; height:100%; object-fit:cover;">`;
+
+            // 3. Comenzar a descargar la base de datos de Excel (hasta ahora se inicia)
             cargarDatos();
+        } else {
+            alert("Acceso denegado. Tu cuenta no está autorizada para administrar el Inventory Hub.");
         }
+    }
 
-        function cargarDatos() {
-            document.getElementById('iconoSync').classList.add('fa-spin');
-            const tbody = document.getElementById('cuerpoTabla');
-            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-400 font-medium"><i class="fas fa-circle-notch fa-spin text-2xl mb-2 text-indigo-500"></i><br>Conectando con Google Sheets...</td></tr>`;
+    // ============================================
+    // URLS GOOGLE SHEETS
+    // ============================================
+    const URL_API = 'https://script.google.com/macros/s/AKfycbyFAXX2S1ORS2yoIq7Bg2WuilBBPy89kp_r2shHjiWpsGhkhmxM1l5C2pPibQm-bK6lDA/exec';
+    const URL_COMPUTADORAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6kOBope9SyJ1VME0-7BTI3Uv5QdgvBGTom-8UEY5MMeGXriL9iiZOQKn2S7vQ-bPt-jsbwH9Tj_tR/pub?gid=0&single=true&output=csv';
+    const URL_LABORATORIOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6kOBope9SyJ1VME0-7BTI3Uv5QdgvBGTom-8UEY5MMeGXriL9iiZOQKn2S7vQ-bPt-jsbwH9Tj_tR/pub?gid=1627474601&single=true&output=csv';
+
+    // ============================================
+    // DATOS GLOBALES
+    // ============================================
+    let datosComputadoras = [];
+    let datosLaboratorios = [];
+    let modoEdicion = false;
+    let idEditando = null;
+
+    // ============================================
+    // FUNCIÓN: CSV a JSON
+    // ============================================
+    function csvToJson(csv) {
+        const lineas = csv.split('\n').filter(line => line.trim() !== '');
+        if (lineas.length === 0) return [];
+        
+        const headers = lineas[0].split(',').map(h => h.trim());
+        const resultados = [];
+        
+        for (let i = 1; i < lineas.length; i++) {
+            const valores = lineas[i].split(',').map(v => v.trim());
+            const obj = {};
+            headers.forEach((header, index) => {
+                obj[header] = valores[index] || '';
+            });
+            resultados.push(obj);
+        }
+        return resultados;
+    }
+
+    // ============================================
+    // CARGAR DATOS DESDE GOOGLE SHEETS
+    // ============================================
+    async function cargarDatos() {
+        try {
+            const respComp = await fetch(URL_COMPUTADORAS + '&nocache=' + new Date().getTime());
+            const csvComp = await respComp.text();
+            datosComputadoras = csvToJson(csvComp);
             
-            const payload = { accion: 'leerEquipos' };
-            const script = document.createElement('script');
-            const callbackName = 'callback_dashboard_' + Date.now();
+            const respLab = await fetch(URL_LABORATORIOS + '&nocache=' + new Date().getTime());
+            const csvLab = await respLab.text();
+            datosLaboratorios = csvToJson(csvLab);
             
-            window[callbackName] = function(res) {
-                delete window[callbackName]; 
-                document.body.removeChild(script);
-                document.getElementById('iconoSync').classList.remove('fa-spin');
-                
-                if (res.success) {
-                    datosGlobales = res.data; 
-                    
-                    let piezas = 0;
-                    let bodega = 0;
+            actualizarDashboard();
+            renderizarComputadoras();
+            renderizarLaboratorios();
+            actualizarBadges();
+            console.log('✅ Datos cargados correctamente');
+        } catch (error) {
+            console.error('Error cargando datos:', error);
+            usarDatosEjemplo();
+        }
+    }
 
-                    res.data.forEach(eq => {
-                        let cantidad = parseInt(eq.piezas) || 1;
-                        piezas += cantidad;
-                        let ubicacion = (eq.ubicacion || '').toLowerCase();
-                        if (ubicacion.includes('bodega') || ubicacion.includes('almacen')) bodega += cantidad;
-                    });
+    // ============================================
+    // DATOS DE EJEMPLO
+    // ============================================
+    function usarDatosEjemplo() {
+        datosComputadoras = [
+            { ID: 'PC-001', Nombre: 'Laptop Dell', Marca: 'Dell', Modelo: 'Latitude 5420', RAM: '16GB', Estado: 'Operativa', Ubicación: 'Lab 1' },
+            { ID: 'PC-002', Nombre: 'Desktop HP', Marca: 'HP', Modelo: 'ProDesk 400', RAM: '8GB', Estado: 'Operativa', Ubicación: 'Lab 2' }
+        ];
+        datosLaboratorios = [
+            { ID: 'LAB-001', Nombre: 'Redes', Ubicación: 'Edif A - Piso 2', Capacidad: '20', Equipos: '12', Encargado: 'Ing. López', Estado: 'Activo' }
+        ];
+        actualizarDashboard();
+        renderizarComputadoras();
+        renderizarLaboratorios();
+        actualizarBadges();
+    }
 
-                    document.getElementById('countRegistros').innerText = res.data.length;
-                    document.getElementById('countPiezas').innerText = piezas;
-                    document.getElementById('countBodega').innerText = bodega;
+    // ============================================
+    // ACTUALIZAR DASHBOARD
+    // ============================================
+    function actualizarDashboard() {
+        document.getElementById('totalEquipos').textContent = datosComputadoras.length;
+        document.getElementById('totalOperativos').textContent = datosComputadoras.filter(c => c.Estado === 'Operativa').length;
+        document.getElementById('totalMantenimiento').textContent = datosComputadoras.filter(c => c.Estado === 'Mantenimiento').length;
+        document.getElementById('totalLabs').textContent = datosLaboratorios.length;
+        
+        const ultimos = datosComputadoras.slice(-3).reverse();
+        const container = document.getElementById('ultimosEquipos');
+        if (ultimos.length === 0) {
+            container.innerHTML = '<p style="padding:16px;color:#999;">No hay equipos registrados</p>';
+        } else {
+            container.innerHTML = `<table>${ultimos.map(c => `
+                <tr>
+                    <td>${c.ID}</td>
+                    <td>${c.Nombre}</td>
+                    <td><span class="status-badge status-${c.Estado === 'Operativa' ? 'operativa' : c.Estado === 'Mantenimiento' ? 'mantenimiento' : 'baja'}">${c.Estado}</span></td>
+                </tr>
+            `).join('')}</table>`;
+        }
+        
+        const activos = datosLaboratorios.filter(l => l.Estado === 'Activo');
+        const containerLab = document.getElementById('ultimosLabs');
+        if (activos.length === 0) {
+            containerLab.innerHTML = '<p style="padding:16px;color:#999;">No hay laboratorios activos</p>';
+        } else {
+            containerLab.innerHTML = `<table>${activos.slice(0, 5).map(l => `
+                <tr>
+                    <td>${l.ID}</td>
+                    <td>${l.Nombre}</td>
+                    <td><span class="status-badge status-activo">Activo</span></td>
+                </tr>
+            `).join('')}</table>`;
+        }
+    }
 
-                    renderTabla(datosGlobales);
-                } else {
-                    alert('Error al leer BD: ' + res.message);
-                }
+    // ============================================
+    // RENDERIZAR COMPUTADORAS
+    // ============================================
+    function renderizarComputadoras() {
+        const tbody = document.getElementById('tablaComputadoras');
+        const search = document.getElementById('searchComputadora').value.toLowerCase();
+        const filter = document.getElementById('filterComputadora').value;
+        
+        let filtrados = datosComputadoras;
+        if (search) {
+            filtrados = filtrados.filter(c => 
+                c.ID?.toLowerCase().includes(search) ||
+                c.Nombre?.toLowerCase().includes(search) ||
+                c.Marca?.toLowerCase().includes(search)
+            );
+        }
+        if (filter) filtrados = filtrados.filter(c => c.Estado === filter);
+        
+        if (filtrados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#999;">No hay datos</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = filtrados.map(c => {
+            const estadoClass = c.Estado === 'Operativa' ? 'operativa' : c.Estado === 'Mantenimiento' ? 'mantenimiento' : 'baja';
+            return `
+                <tr>
+                    <td><strong>${c.ID || ''}</strong></td>
+                    <td>${c.Nombre || ''}</td>
+                    <td>${c.Marca || ''}</td>
+                    <td>${c.Modelo || ''}</td>
+                    <td>${c.RAM || ''}</td>
+                    <td><span class="status-badge status-${estadoClass}">${c.Estado || ''}</span></td>
+                    <td>${c.Ubicación || ''}</td>
+                    <td style="text-align:center;">
+                        <button class="action-btn edit" onclick="editarComputadora('${c.ID}')"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete" onclick="eliminarComputadora('${c.ID}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // ============================================
+    // RENDERIZAR LABORATORIOS
+    // ============================================
+    function renderizarLaboratorios() {
+        const tbody = document.getElementById('tablaLaboratorios');
+        const search = document.getElementById('searchLaboratorio').value.toLowerCase();
+        
+        let filtrados = datosLaboratorios;
+        if (search) {
+            filtrados = filtrados.filter(l => 
+                l.ID?.toLowerCase().includes(search) ||
+                l.Nombre?.toLowerCase().includes(search) ||
+                l.Encargado?.toLowerCase().includes(search)
+            );
+        }
+        
+        if (filtrados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#999;">No hay datos</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = filtrados.map(l => {
+            const estadoClass = l.Estado === 'Activo' ? 'activo' : 'inactivo';
+            return `
+                <tr>
+                    <td><strong>${l.ID || ''}</strong></td>
+                    <td>${l.Nombre || ''}</td>
+                    <td>${l.Ubicación || ''}</td>
+                    <td>${l.Capacidad || ''}</td>
+                    <td>${l.Equipos || ''}</td>
+                    <td>${l.Encargado || ''}</td>
+                    <td><span class="status-badge status-${estadoClass}">${l.Estado || ''}</span></td>
+                    <td style="text-align:center;">
+                        <button class="action-btn edit" onclick="editarLaboratorio('${l.ID}')"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete" onclick="eliminarLaboratorio('${l.ID}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // ============================================
+    // FILTROS Y BADGES
+    // ============================================
+    function filtrarComputadoras() { renderizarComputadoras(); }
+    function filtrarLaboratorios() { renderizarLaboratorios(); }
+    function actualizarBadges() {
+        document.getElementById('badgeComputadoras').textContent = datosComputadoras.length;
+        document.getElementById('badgeLaboratorios').textContent = datosLaboratorios.length;
+    }
+
+    // ============================================
+    // NAVEGACIÓN
+    // ============================================
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            if (btn.textContent.toLowerCase().includes(tabName)) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    // ============================================
+    // MODAL
+    // ============================================
+    function openModal(tipo) {
+        modoEdicion = false;
+        idEditando = null;
+        
+        const overlay = document.getElementById('modalOverlay');
+        const title = document.getElementById('modalTitle');
+        const fieldsComp = document.getElementById('fieldsComputadora');
+        const fieldsLab = document.getElementById('fieldsLaboratorio');
+        
+        if (tipo === 'computadora') {
+            title.textContent = '➕ Agregar computadora';
+            fieldsComp.style.display = 'block';
+            fieldsLab.style.display = 'none';
+            document.getElementById('compId').value = '';
+            document.getElementById('compNombre').value = '';
+            document.getElementById('compMarca').value = '';
+            document.getElementById('compModelo').value = '';
+            document.getElementById('compRam').value = '';
+            document.getElementById('compEstado').value = 'Operativa';
+            document.getElementById('compUbicacion').value = '';
+        } else {
+            title.textContent = '➕ Agregar laboratorio';
+            fieldsComp.style.display = 'none';
+            fieldsLab.style.display = 'block';
+            document.getElementById('labId').value = '';
+            document.getElementById('labNombre').value = '';
+            document.getElementById('labUbicacion').value = '';
+            document.getElementById('labCapacidad').value = '';
+            document.getElementById('labEquipos').value = '';
+            document.getElementById('labEncargado').value = '';
+            document.getElementById('labEstado').value = 'Activo';
+        }
+        overlay.classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // ============================================
+    // JSONP - COMUNICACIÓN CON GOOGLE SHEETS
+    // ============================================
+    function enviarDatosAPI(datos, callback) {
+        const script = document.createElement('script');
+        const callbackName = 'callback_' + Date.now();
+        
+        window[callbackName] = function(respuesta) {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            callback(respuesta);
+        };
+        
+        const url = URL_API + '?callback=' + callbackName + '&data=' + encodeURIComponent(JSON.stringify(datos));
+        script.src = url;
+        document.body.appendChild(script);
+        
+        // Timeout por si falla
+        setTimeout(() => {
+            if (window[callbackName]) {
+                delete window[callbackName];
+                callback({ success: false, message: 'Tiempo de espera agotado' });
+            }
+        }, 15000);
+    }
+
+    // ============================================
+    // GUARDAR DESDE MODAL
+    // ============================================
+    document.getElementById('btnGuardar').addEventListener('click', function(e) {
+        e.preventDefault();
+        guardarDesdeModal();
+    });
+
+    function guardarDesdeModal() {
+        const isComputadora = document.getElementById('fieldsComputadora').style.display !== 'none';
+        
+        if (isComputadora) {
+            const datos = {
+                id: document.getElementById('compId').value.trim(),
+                nombre: document.getElementById('compNombre').value.trim(),
+                marca: document.getElementById('compMarca').value.trim(),
+                modelo: document.getElementById('compModelo').value.trim(),
+                ram: document.getElementById('compRam').value.trim(),
+                estado: document.getElementById('compEstado').value,
+                ubicacion: document.getElementById('compUbicacion').value.trim()
             };
             
-            script.src = URL_API + '?callback=' + callbackName + '&data=' + encodeURIComponent(JSON.stringify(payload));
-            document.body.appendChild(script);
-        }
-
-        function renderTabla(datos) {
-            const tbody = document.getElementById('cuerpoTabla');
-            tbody.innerHTML = ''; 
-            
-            if(datos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No hay registros que coincidan.</td></tr>`;
-                document.getElementById('infoResultados').innerText = `Mostrando 0 registros`;
-                return;
-            }
-
-            datos.forEach(eq => {
-                let botonFoto = eq.foto ? 
-                    `<a href="${eq.foto}" target="_blank" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-full inline-flex"><i class="fas fa-image"></i></a>` : 
-                    `<span class="text-gray-300">-</span>`;
-
-                let fila = `
-                    <tr class="hover:bg-indigo-50/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-700">${eq.inventario}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center font-medium">${eq.piezas}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600">${eq.descripcion}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                ${eq.ubicacion}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">${botonFoto}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += fila;
-            });
-            
-            document.getElementById('infoResultados').innerText = `Mostrando ${datos.length} registros`;
-        }
-
-        function filtrarTabla() {
-            const textoBuscado = document.getElementById('buscadorTabla').value.toLowerCase();
-            
-            const datosFiltrados = datosGlobales.filter(eq => {
-                return eq.inventario.toLowerCase().includes(textoBuscado) ||
-                       eq.descripcion.toLowerCase().includes(textoBuscado) ||
-                       eq.ubicacion.toLowerCase().includes(textoBuscado);
-            });
-            
-            renderTabla(datosFiltrados);
-        }
-
-        function exportarCSV() {
-            if(datosGlobales.length === 0) {
-                alert("No hay datos para exportar.");
+            if (!datos.id || !datos.nombre || !datos.ubicacion) {
+                alert('⚠️ Los campos ID, Nombre y Ubicación son obligatorios');
                 return;
             }
             
-            let csvContent = "data:text/csv;charset=utf-8,INVENTARIO,PIEZAS,DESCRIPCION,UBICACION,FOTO\n";
+            if (modoEdicion && idEditando) {
+                editarComputadoraEnAPI(idEditando, datos);
+            } else {
+                agregarComputadoraEnAPI(datos);
+            }
+        } else {
+            const datos = {
+                id: document.getElementById('labId').value.trim(),
+                nombre: document.getElementById('labNombre').value.trim(),
+                ubicacion: document.getElementById('labUbicacion').value.trim(),
+                capacidad: document.getElementById('labCapacidad').value.trim(),
+                equipos: document.getElementById('labEquipos').value.trim(),
+                encargado: document.getElementById('labEncargado').value.trim(),
+                estado: document.getElementById('labEstado').value
+            };
             
-            datosGlobales.forEach(function(eq) {
-                let descLimpia = eq.descripcion.replace(/,/g, " "); 
-                let fila = `${eq.inventario},${eq.piezas},${descLimpia},${eq.ubicacion},${eq.foto}`;
-                csvContent += fila + "\n";
-            });
+            if (!datos.id || !datos.nombre) {
+                alert('⚠️ Los campos ID y Nombre son obligatorios');
+                return;
+            }
             
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Reporte_Inventario_ICEL.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (modoEdicion && idEditando) {
+                editarLaboratorioEnAPI(idEditando, datos);
+            } else {
+                agregarLaboratorioEnAPI(datos);
+            }
         }
+    }
 
-        // Ya NO usamos window.onload = cargarDatos; porque ahora la carga inicia SOLO cuando el login es válido.
-    </script>
+    // ============================================
+    // FUNCIONES CRUD PARA COMPUTADORAS
+    // ============================================
+    function agregarComputadoraEnAPI(datos) {
+        const payload = {
+            accion: 'agregarComputadora',
+            ...datos
+        };
+        
+        enviarDatosAPI(payload, function(respuesta) {
+            if (respuesta.success) {
+                alert('✅ Computadora agregada correctamente');
+                closeModal();
+                setTimeout(cargarDatos, 1000);
+            } else {
+                alert('❌ Error al guardar: ' + (respuesta.message || 'Error desconocido'));
+            }
+        });
+    }
+
+    function editarComputadoraEnAPI(id, datos) {
+        const payload = {
+            accion: 'editarComputadora',
+            id: id,
+            ...datos
+        };
+        
+        enviarDatosAPI(payload, function(respuesta) {
+            if (respuesta.success) {
+                alert('✅ Computadora actualizada correctamente');
+                closeModal();
+                setTimeout(cargarDatos, 1000);
+            } else {
+                alert('❌ Error al editar: ' + (respuesta.message || 'Error desconocido'));
+            }
+        });
+    }
+
+    function eliminarComputadora(id) {
+        if (!confirm('¿Eliminar la computadora ' + id + '?')) return;
+        
+        const payload = {
+            accion: 'eliminarComputadora',
+            id: id
+        };
+        
+        enviarDatosAPI(payload, function(respuesta) {
+            if (respuesta.success) {
+                alert('✅ Computadora eliminada');
+                setTimeout(cargarDatos, 1000);
+            } else {
+                alert('❌ Error al eliminar: ' + (respuesta.message || 'Error desconocido'));
+            }
+        });
+    }
+
+    // ============================================
+    // FUNCIONES CRUD PARA LABORATORIOS
+    // ============================================
+    function agregarLaboratorioEnAPI(datos) {
+        const payload = {
+            accion: 'agregarLaboratorio',
+            ...datos
+        };
+        
+        enviarDatosAPI(payload, function(respuesta) {
+            if (respuesta.success) {
+                alert('✅ Laboratorio agregado correctamente');
+                closeModal();
+                setTimeout(cargarDatos, 1000);
+            } else {
+                alert('❌ Error al guardar: ' + (respuesta.message || 'Error desconocido'));
+            }
+        });
+    }
+
+    function editarLaboratorioEnAPI(id, datos) {
+        const payload = {
+            accion: 'editarLaboratorio',
+            id: id,
+            ...datos
+        };
+        
+        enviarDatosAPI(payload, function(respuesta) {
+            if (respuesta.success) {
+                alert('✅ Laboratorio actualizado correctamente');
+                closeModal();
+                setTimeout(cargarDatos, 1000);
+            } else {
+                alert('❌ Error al editar: ' + (respuesta.message || 'Error desconocido'));
+            }
+        });
+    }
+
+    function eliminarLaboratorio(id) {
+        if (!confirm('¿Eliminar el laboratorio ' + id + '?')) return;
+        
+        const payload = {
+            accion: 'eliminarLaboratorio',
+            id: id
+        };
+        
+        enviarDatosAPI(payload, function(respuesta) {
+            if (respuesta.success) {
+                alert('✅ Laboratorio eliminado');
+                setTimeout(cargarDatos, 1000);
+            } else {
+                alert('❌ Error al eliminar: ' + (respuesta.message || 'Error desconocido'));
+            }
+        });
+    }
+
+    // ============================================
+    // EDITAR (cargar datos en el modal)
+    // ============================================
+    function editarComputadora(id) {
+        const comp = datosComputadoras.find(c => c.ID === id);
+        if (!comp) return;
+        
+        modoEdicion = true;
+        idEditando = id;
+        
+        document.getElementById('modalTitle').textContent = '✏️ Editar computadora';
+        document.getElementById('fieldsComputadora').style.display = 'block';
+        document.getElementById('fieldsLaboratorio').style.display = 'none';
+        
+        document.getElementById('compId').value = comp.ID || '';
+        document.getElementById('compNombre').value = comp.Nombre || '';
+        document.getElementById('compMarca').value = comp.Marca || '';
+        document.getElementById('compModelo').value = comp.Modelo || '';
+        document.getElementById('compRam').value = comp.RAM || '';
+        document.getElementById('compEstado').value = comp.Estado || 'Operativa';
+        document.getElementById('compUbicacion').value = comp.Ubicación || '';
+        
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function editarLaboratorio(id) {
+        const lab = datosLaboratorios.find(l => l.ID === id);
+        if (!lab) return;
+        
+        modoEdicion = true;
+        idEditando = id;
+        
+        document.getElementById('modalTitle').textContent = '✏️ Editar laboratorio';
+        document.getElementById('fieldsComputadora').style.display = 'none';
+        document.getElementById('fieldsLaboratorio').style.display = 'block';
+        
+        document.getElementById('labId').value = lab.ID || '';
+        document.getElementById('labNombre').value = lab.Nombre || '';
+        document.getElementById('labUbicacion').value = lab.Ubicación || '';
+        document.getElementById('labCapacidad').value = lab.Capacidad || '';
+        document.getElementById('labEquipos').value = lab.Equipos || '';
+        document.getElementById('labEncargado').value = lab.Encargado || '';
+        document.getElementById('labEstado').value = lab.Estado || 'Activo';
+        
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    // ============================================
+    // LOGOUT E INICIALIZAR
+    // ============================================
+    function logout() {
+        if (confirm('¿Cerrar sesión?')) {
+            location.reload();
+        }
+    }
+
+    // YA NO LLAMAMOS A cargarDatos() AQUÍ AL FINAL
+    // AHORA SE LLAMA AUTOMÁTICAMENTE AL VALIDAR EL LOGIN CON GOOGLE
+</script>
 </body>
 </html>
