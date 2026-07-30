@@ -2,11 +2,9 @@
 <html lang="es">
 <head>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- INICIO AGREGADO: LIBRERÍA DE ESCÁNER -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <!-- FIN AGREGADO -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestor de Equipos - ICEL La Villa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,23 +12,27 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
         .input-field {
-            width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px;
-            font-size: 14px; outline: none; transition: all 0.2s; background: #ffffff;
+            width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 16px; /* Evita zoom automático en celulares */
+            outline: none; transition: all 0.2s; background: #ffffff;
+        }
+        @media (min-width: 768px) {
+            .input-field { font-size: 14px; padding: 10px 14px; }
         }
         .input-field:focus { border-color: #1a237e; box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1); }
-        .input-label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 4px; text-transform: uppercase;}
+        .input-label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px; text-transform: uppercase;}
         #ssoOverlay { backdrop-filter: blur(8px); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-start md:items-center justify-center p-2 sm:p-4">
 
     <!-- SSO LOGIN PARA ALUMNOS -->
-    <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/80 z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border-t-4 border-[#00c853]">
+    <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border-t-4 border-[#00c853]">
             <div class="w-16 h-16 bg-[#00c853] rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg">
                 <i class="fas fa-clipboard-check"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-1">Registro de Equipos</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Registro de Equipos</h2>
             <p class="text-sm text-gray-500 mb-6">Inicia sesión con tu cuenta autorizada para capturar</p>
             
             <div id="g_id_onload"
@@ -41,39 +43,42 @@
                  data-auto_prompt="false">
             </div>
             
-            <div class="g_id_signin flex justify-center" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+            <div class="g_id_signin flex justify-center w-full overflow-hidden" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="center"></div>
         </div>
     </div>
 
-    <!-- INICIO AGREGADO: CONTENEDOR DEL ESCÁNER DE CÁMARA -->
-    <div id="scannerOverlay" class="fixed inset-0 bg-gray-900/95 z-[60] flex flex-col items-center justify-center hidden">
-        <h3 class="text-white text-xl font-bold mb-4 text-center px-4">Escanea la Etiqueta / Código</h3>
-        <div id="reader" style="width: 100%; max-width: 400px;" class="bg-black rounded-xl overflow-hidden shadow-2xl border-2 border-gray-700"></div>
-        <button type="button" onclick="cerrarEscaner()" class="mt-8 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors flex items-center gap-2">
-            <i class="fas fa-times"></i> Cancelar Escáner
+    <!-- ESCÁNER DE CÁMARA -->
+    <div id="scannerOverlay" class="fixed inset-0 bg-gray-900/95 z-[60] flex flex-col items-center justify-center hidden p-4">
+        <h3 class="text-white text-lg sm:text-xl font-bold mb-4 text-center">Escanea la Etiqueta / Código</h3>
+        <div id="reader" class="w-full max-w-sm bg-black rounded-xl overflow-hidden shadow-2xl border-2 border-gray-700"></div>
+        <button type="button" onclick="cerrarEscaner()" class="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 sm:px-8 rounded-lg shadow-md transition-colors flex items-center gap-2">
+            <i class="fas fa-times"></i> Cancelar
         </button>
     </div>
-    <!-- FIN AGREGADO -->
 
     <!-- MAIN APP -->
-    <div id="mainApp" class="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hidden">
-        <div class="bg-[#1a237e] p-6 text-white">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold">Inventario Sistemas - Corporativo</h2>
-                <button onclick="location.reload()" class="text-indigo-200 hover:text-white text-sm"><i class="fas fa-sign-out-alt"></i> Salir</button>
+    <div id="mainApp" class="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hidden my-4 md:my-0">
+        <div class="bg-[#1a237e] p-4 sm:p-6 text-white">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                <h2 class="text-lg sm:text-xl font-bold">Inventario Sistemas</h2>
+                <button onclick="location.reload()" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-indigo-100 hover:text-white text-sm transition-colors w-full sm:w-auto text-left sm:text-center">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Salir
+                </button>
             </div>
-            <div class="flex gap-2 bg-indigo-900/50 p-2 rounded-lg border border-indigo-500/30">
-                <input type="text" id="searchId" onblur="autobuscar()" placeholder="Buscar por INVENTARIO (Ej. LVI-001)" class="w-full bg-transparent border-none text-white outline-none px-2 uppercase">
-                <!-- INICIO AGREGADO: BOTÓN ESCÁNER BUSCADOR -->
-                <button type="button" onclick="abrirEscaner('searchId')" class="bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md font-semibold text-sm flex items-center justify-center transition-colors"><i class="fas fa-qrcode"></i></button>
-                <!-- FIN AGREGADO -->
-                <button onclick="buscarEquipo()" class="bg-[#00c853] px-4 py-2 rounded-md font-semibold text-sm flex items-center gap-2"><i class="fas fa-search"></i> Buscar</button>
+            <div class="flex flex-col sm:flex-row gap-2 bg-indigo-900/50 p-2 rounded-lg border border-indigo-500/30">
+                <div class="flex w-full gap-2 bg-transparent border-b sm:border-b-0 border-indigo-500/50 pb-2 sm:pb-0">
+                    <input type="text" id="searchId" onblur="autobuscar()" placeholder="BUSCAR ID (Ej. LVI-001)" class="w-full bg-transparent border-none text-white outline-none px-2 uppercase placeholder-indigo-300">
+                    <button type="button" onclick="abrirEscaner('searchId')" class="bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md font-semibold text-white transition-colors shrink-0"><i class="fas fa-qrcode"></i></button>
+                </div>
+                <button onclick="buscarEquipo()" class="bg-[#00c853] hover:bg-[#00b048] px-4 py-2 rounded-md font-semibold text-sm flex items-center justify-center gap-2 w-full sm:w-auto transition-colors mt-1 sm:mt-0">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
             </div>
             <p id="searchMsg" class="text-xs mt-2 font-medium h-4"></p>
         </div>
 
-        <form id="formEquipo" class="p-6 space-y-5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <form id="formEquipo" class="p-4 sm:p-6 space-y-4 sm:space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <div>
                     <label class="input-label">1. INVENTARIO (Etiqueta/ID) *</label>
                     <input type="text" id="eqInventario" required class="input-field font-mono font-bold bg-gray-50 uppercase" readonly>
@@ -89,33 +94,31 @@
                 <textarea id="eqDescripcion" required rows="3" placeholder="Ej. PC Dell Optiplex..." class="input-field resize-none"></textarea>
             </div>
 
-            <!-- INICIO AGREGADO: CAMPO NÚMERO DE SERIE -->
             <div>
                 <label class="input-label">3.5 NÚMERO DE SERIE</label>
                 <div class="flex gap-2 mt-1">
                     <input type="text" id="eqNumSerie" placeholder="Ej. SN-987654321" class="input-field flex-1 font-mono uppercase">
-                    <button type="button" onclick="abrirEscaner('eqNumSerie')" class="bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center">
+                    <button type="button" onclick="abrirEscaner('eqNumSerie')" class="bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center shrink-0">
                         <i class="fas fa-qrcode"></i> <span class="hidden sm:inline ml-2">Escanear</span>
                     </button>
                 </div>
             </div>
-            <!-- FIN AGREGADO -->
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <div>
                     <label class="input-label">4. UBICACIÓN *</label>
-                    <input type="text" id="eqUbicacion" required placeholder="Ej. Laboratorio 1, Bodega..." class="input-field">
+                    <input type="text" id="eqUbicacion" required placeholder="Ej. Laboratorio 1..." class="input-field">
                 </div>
                 
                 <div>
                     <label class="input-label">5. EVIDENCIA FOTOGRÁFICA</label>
                     <div class="flex items-center gap-3 mt-1">
-                        <label class="flex-1 cursor-pointer bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-center py-2.5 rounded-lg text-sm font-semibold transition-colors">
+                        <label class="flex-1 cursor-pointer bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-center py-3 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors block">
                             <i class="fas fa-camera"></i> Tomar Foto
                             <input type="file" id="eqFotoFile" accept="image/*" capture="environment" class="hidden" onchange="procesarFoto(event)">
                         </label>
                         
-                        <div id="cajaMiniatura" class="hidden w-11 h-11 rounded-lg border-2 border-gray-300 relative">
+                        <div id="cajaMiniatura" class="hidden w-12 h-12 sm:w-11 sm:h-11 rounded-lg border-2 border-gray-300 relative shrink-0">
                             <img id="imgMiniatura" class="w-full h-full object-cover rounded-md">
                             <button type="button" onclick="quitarFoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md"><i class="fas fa-times"></i></button>
                         </div>
@@ -123,11 +126,13 @@
                 </div>
             </div>
 
-            <hr class="border-gray-100">
+            <hr class="border-gray-100 my-2">
 
-            <div class="flex justify-between items-center pt-2">
-                <button type="button" onclick="resetFormulario()" class="text-gray-500 hover:text-gray-800 text-sm font-semibold"><i class="fas fa-undo"></i> Limpiar</button>
-                <button type="submit" id="btnGuardar" class="bg-[#1a237e] text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-md flex items-center gap-2" disabled>
+            <div class="flex flex-col-reverse sm:flex-row justify-between items-center gap-3 pt-2">
+                <button type="button" onclick="resetFormulario()" class="w-full sm:w-auto py-3 sm:py-2 text-gray-500 hover:text-gray-800 text-sm font-semibold bg-gray-50 sm:bg-transparent rounded-lg sm:rounded-none">
+                    <i class="fas fa-undo"></i> Limpiar todo
+                </button>
+                <button type="submit" id="btnGuardar" class="w-full sm:w-auto bg-[#1a237e] hover:bg-[#11185b] text-white px-6 py-3 sm:py-2.5 rounded-lg font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-colors" disabled>
                     <i class="fas fa-save"></i> <span>Esperando búsqueda...</span>
                 </button>
             </div>
@@ -164,7 +169,6 @@
             if (alumnosPermitidos.includes(correoUsuario)) {
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                document.getElementById('searchId').focus();
             } else {
                 alert("Acceso denegado. Tu cuenta no está autorizada para capturar en este inventario.");
             }
@@ -214,7 +218,7 @@
             if (!idBuscado) return;
             const btn = document.getElementById('btnGuardar');
             
-            document.getElementById('searchMsg').innerHTML = `<span class="text-blue-400">Verificando en base de datos...</span>`;
+            document.getElementById('searchMsg').innerHTML = `<span class="text-blue-400">Verificando...</span>`;
             
             const payload = { accion: 'leerEquipos' };
             const script = document.createElement('script');
@@ -228,7 +232,7 @@
 
                     if (equipo) {
                         modoEdicion = true;
-                        document.getElementById('searchMsg').innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle"></i> Localizado. Sube foto para actualizarla.</span>`;
+                        document.getElementById('searchMsg').innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle"></i> Localizado. Sube foto para actualizar.</span>`;
                         document.getElementById('eqPiezas').value = equipo.piezas || '1';
                         document.getElementById('eqDescripcion').value = equipo.descripcion || '';
                         document.getElementById('eqUbicacion').value = equipo.ubicacion || '';
@@ -242,11 +246,7 @@
                         btn.innerHTML = '<i class="fas fa-save"></i> <span>Registrar</span>';
                     }
                     quitarFoto(); 
-                    
-                    // INICIO AGREGADO: LIMPIAR EL INPUT DE S/N AL BUSCAR
                     document.getElementById('eqNumSerie').value = '';
-                    // FIN AGREGADO
-
                     btn.disabled = false;
                 }
             };
@@ -262,16 +262,14 @@
             e.preventDefault();
             
             const btn = document.getElementById('btnGuardar');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Subiendo foto y guardando...</span>';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Guardando...</span>';
             btn.disabled = true;
 
-            // INICIO AGREGADO: UNIR NÚMERO DE SERIE A LA DESCRIPCIÓN
             let numSerieValor = document.getElementById('eqNumSerie').value.trim();
             let descOriginal = document.getElementById('eqDescripcion').value;
             if(numSerieValor !== "") {
                 document.getElementById('eqDescripcion').value = descOriginal + "\nS/N: " + numSerieValor;
             }
-            // FIN AGREGADO
 
             const payload = {
                 accion: modoEdicion ? 'editarEquipo' : 'agregarEquipo',
@@ -313,10 +311,13 @@
             const btn = document.getElementById('btnGuardar');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-save"></i> <span>Esperando búsqueda...</span>';
-            document.getElementById('searchId').focus();
+            
+            // Si están en desktop, enfocar el buscador. Si están en celular, mejor no para evitar que salte el teclado automático.
+            if(window.innerWidth > 768) {
+                document.getElementById('searchId').focus();
+            }
         }
 
-        // INICIO AGREGADO: LÓGICA DEL ESCÁNER DE CÁMARA
         let html5QrcodeScanner = null;
         let targetInputId = "";
 
@@ -343,9 +344,7 @@
             }
         }
 
-        function onScanFailure(error) {
-            // Se ignora silenciosamente mientras la cámara busca un código válido
-        }
+        function onScanFailure(error) {}
 
         function cerrarEscaner() {
             document.getElementById('scannerOverlay').classList.add('hidden');
@@ -357,7 +356,6 @@
                 });
             }
         }
-        // FIN AGREGADO
     </script>
 </body>
 </html>
