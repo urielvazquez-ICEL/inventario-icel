@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- INICIO AGREGADO: LIBRERÍA DE ESCÁNER -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- FIN AGREGADO -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Equipos - ICEL La Villa</title>
@@ -42,6 +45,16 @@
         </div>
     </div>
 
+    <!-- INICIO AGREGADO: CONTENEDOR DEL ESCÁNER DE CÁMARA -->
+    <div id="scannerOverlay" class="fixed inset-0 bg-gray-900/95 z-[60] flex flex-col items-center justify-center hidden">
+        <h3 class="text-white text-xl font-bold mb-4 text-center px-4">Escanea la Etiqueta / Código</h3>
+        <div id="reader" style="width: 100%; max-width: 400px;" class="bg-black rounded-xl overflow-hidden shadow-2xl border-2 border-gray-700"></div>
+        <button type="button" onclick="cerrarEscaner()" class="mt-8 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors flex items-center gap-2">
+            <i class="fas fa-times"></i> Cancelar Escáner
+        </button>
+    </div>
+    <!-- FIN AGREGADO -->
+
     <!-- MAIN APP -->
     <div id="mainApp" class="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hidden">
         <div class="bg-[#1a237e] p-6 text-white">
@@ -51,6 +64,9 @@
             </div>
             <div class="flex gap-2 bg-indigo-900/50 p-2 rounded-lg border border-indigo-500/30">
                 <input type="text" id="searchId" onblur="autobuscar()" placeholder="Buscar por INVENTARIO (Ej. LVI-001)" class="w-full bg-transparent border-none text-white outline-none px-2 uppercase">
+                <!-- INICIO AGREGADO: BOTÓN ESCÁNER BUSCADOR -->
+                <button type="button" onclick="abrirEscaner('searchId')" class="bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md font-semibold text-sm flex items-center justify-center transition-colors"><i class="fas fa-qrcode"></i></button>
+                <!-- FIN AGREGADO -->
                 <button onclick="buscarEquipo()" class="bg-[#00c853] px-4 py-2 rounded-md font-semibold text-sm flex items-center gap-2"><i class="fas fa-search"></i> Buscar</button>
             </div>
             <p id="searchMsg" class="text-xs mt-2 font-medium h-4"></p>
@@ -72,6 +88,18 @@
                 <label class="input-label">3. DESCRIPCIÓN ESPECÍFICA *</label>
                 <textarea id="eqDescripcion" required rows="3" placeholder="Ej. PC Dell Optiplex..." class="input-field resize-none"></textarea>
             </div>
+
+            <!-- INICIO AGREGADO: CAMPO NÚMERO DE SERIE -->
+            <div>
+                <label class="input-label">3.5 NÚMERO DE SERIE</label>
+                <div class="flex gap-2 mt-1">
+                    <input type="text" id="eqNumSerie" placeholder="Ej. SN-987654321" class="input-field flex-1 font-mono uppercase">
+                    <button type="button" onclick="abrirEscaner('eqNumSerie')" class="bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center">
+                        <i class="fas fa-qrcode"></i> <span class="hidden sm:inline ml-2">Escanear</span>
+                    </button>
+                </div>
+            </div>
+            <!-- FIN AGREGADO -->
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
@@ -112,7 +140,6 @@
         let modoEdicion = false;
         let fotoDataFinal = ""; 
 
-        // ¿Para qué funciona?: Desencripta el token de Google.
         function decodificarJwtResponse(token) {
             let base64Url = token.split('.')[1];
             let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -122,15 +149,10 @@
             return JSON.parse(jsonPayload);
         }
 
-        // ¿Para qué funciona?: Compara el correo del usuario que inicia sesión contra una lista específica que tú defines. Si el correo está en la lista, muestra el sistema; si no, bloquea el acceso.
         function validarLoginAlumno(response) {
             const datosUsuario = decodificarJwtResponse(response.credential);
             const correoUsuario = datosUsuario.email.toLowerCase();
 
-            // ==========================================
-            // LISTA EXACTA DE ALUMNOS PERMITIDOS
-            // (Agrega o quita correos de aquí según necesites)
-            // ==========================================
             const alumnosPermitidos = [
                 "000078438@alumnos.icel.edu.mx",
                 "000011454@alumnos.icel.edu.mx",
@@ -139,14 +161,11 @@
                 "000072748@alumnos.icel.edu.mx"
             ]; 
             
-            // Verificamos si el correo está dentro de la lista
             if (alumnosPermitidos.includes(correoUsuario)) {
-                // Acceso concedido
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 document.getElementById('searchId').focus();
             } else {
-                // Acceso denegado
                 alert("Acceso denegado. Tu cuenta no está autorizada para capturar en este inventario.");
             }
         }
@@ -223,6 +242,11 @@
                         btn.innerHTML = '<i class="fas fa-save"></i> <span>Registrar</span>';
                     }
                     quitarFoto(); 
+                    
+                    // INICIO AGREGADO: LIMPIAR EL INPUT DE S/N AL BUSCAR
+                    document.getElementById('eqNumSerie').value = '';
+                    // FIN AGREGADO
+
                     btn.disabled = false;
                 }
             };
@@ -240,6 +264,14 @@
             const btn = document.getElementById('btnGuardar');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Subiendo foto y guardando...</span>';
             btn.disabled = true;
+
+            // INICIO AGREGADO: UNIR NÚMERO DE SERIE A LA DESCRIPCIÓN
+            let numSerieValor = document.getElementById('eqNumSerie').value.trim();
+            let descOriginal = document.getElementById('eqDescripcion').value;
+            if(numSerieValor !== "") {
+                document.getElementById('eqDescripcion').value = descOriginal + "\nS/N: " + numSerieValor;
+            }
+            // FIN AGREGADO
 
             const payload = {
                 accion: modoEdicion ? 'editarEquipo' : 'agregarEquipo',
@@ -283,6 +315,49 @@
             btn.innerHTML = '<i class="fas fa-save"></i> <span>Esperando búsqueda...</span>';
             document.getElementById('searchId').focus();
         }
+
+        // INICIO AGREGADO: LÓGICA DEL ESCÁNER DE CÁMARA
+        let html5QrcodeScanner = null;
+        let targetInputId = "";
+
+        function abrirEscaner(inputId) {
+            targetInputId = inputId;
+            document.getElementById('scannerOverlay').classList.remove('hidden');
+            
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+            .catch(err => {
+                alert("❌ No se pudo acceder a la cámara. Revisa los permisos de tu navegador o celular.");
+                cerrarEscaner();
+            });
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            document.getElementById(targetInputId).value = decodedText;
+            cerrarEscaner();
+            
+            if(targetInputId === 'searchId') {
+                buscarEquipo();
+            }
+        }
+
+        function onScanFailure(error) {
+            // Se ignora silenciosamente mientras la cámara busca un código válido
+        }
+
+        function cerrarEscaner() {
+            document.getElementById('scannerOverlay').classList.add('hidden');
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then((ignore) => {
+                    html5QrcodeScanner.clear();
+                }).catch((err) => {
+                    console.log("Error deteniendo el escáner", err);
+                });
+            }
+        }
+        // FIN AGREGADO
     </script>
 </body>
 </html>
