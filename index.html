@@ -61,9 +61,18 @@
         <div class="bg-[#1a237e] p-4 sm:p-6 text-white">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <h2 class="text-lg sm:text-xl font-bold">Inventario Sistemas</h2>
-                <button onclick="location.reload()" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-indigo-100 hover:text-white text-sm transition-colors w-full sm:w-auto text-left sm:text-center">
-                    <i class="fas fa-sign-out-alt mr-1"></i> Salir
-                </button>
+                
+                <!-- INICIO AGREGADO: BOTONES DASHBOARD Y SALIR -->
+                <div class="flex w-full sm:w-auto gap-2">
+                    <a href="https://urielvazquez-icel.github.io/inventario-icel/dashboard.html" class="bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 px-3 py-1.5 rounded-lg text-white text-sm transition-colors w-full sm:w-auto text-center flex items-center justify-center gap-1 font-semibold shadow-sm">
+                        <i class="fas fa-chart-pie"></i> Dashboard
+                    </a>
+                    <button onclick="location.reload()" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-indigo-100 hover:text-white text-sm transition-colors w-full sm:w-auto text-center flex items-center justify-center gap-1">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+                <!-- FIN AGREGADO -->
+                
             </div>
             <div class="flex flex-col sm:flex-row gap-2 bg-indigo-900/50 p-2 rounded-lg border border-indigo-500/30">
                 <div class="flex w-full gap-2 bg-transparent border-b sm:border-b-0 border-indigo-500/50 pb-2 sm:pb-0">
@@ -312,7 +321,6 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-save"></i> <span>Esperando búsqueda...</span>';
             
-            // Si están en desktop, enfocar el buscador. Si están en celular, mejor no para evitar que salte el teclado automático.
             if(window.innerWidth > 768) {
                 document.getElementById('searchId').focus();
             }
