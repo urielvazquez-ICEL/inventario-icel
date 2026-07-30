@@ -45,13 +45,11 @@
             
             <div class="g_id_signin flex justify-center w-full overflow-hidden" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="center"></div>
             
-            <!-- INICIO AGREGADO: BOTÓN AL DASHBOARD -->
             <div class="mt-6 pt-5 border-t border-gray-100">
                 <a href="https://urielvazquez-icel.github.io/inventario-icel/dashboard.html" class="w-full inline-flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                     <i class="fas fa-chart-pie text-indigo-500"></i> Ir al Dashboard
                 </a>
             </div>
-            <!-- FIN AGREGADO -->
         </div>
     </div>
 
@@ -113,10 +111,20 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                <!-- INICIO AGREGADO: CASCADA Y TEXTO DE UBICACIÓN -->
                 <div>
                     <label class="input-label">4. UBICACIÓN *</label>
-                    <input type="text" id="eqUbicacion" required placeholder="Ej. Laboratorio 1..." class="input-field">
+                    <div class="flex gap-2 mt-1">
+                        <select id="eqEdificio" required class="input-field w-2/5 appearance-none bg-white font-semibold text-gray-700">
+                            <option value="" disabled selected>Edificio...</option>
+                            <option value="Edificio A">Edificio A</option>
+                            <option value="Edificio B">Edificio B</option>
+                            <option value="Edificio C">Edificio C</option>
+                        </select>
+                        <input type="text" id="eqSalon" required placeholder="Ej. Lab 1, C1..." class="input-field w-3/5">
+                    </div>
                 </div>
+                <!-- FIN AGREGADO -->
                 
                 <div>
                     <label class="input-label">5. EVIDENCIA FOTOGRÁFICA</label>
@@ -243,14 +251,37 @@
                         document.getElementById('searchMsg').innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle"></i> Localizado. Sube foto para actualizar.</span>`;
                         document.getElementById('eqPiezas').value = equipo.piezas || '1';
                         document.getElementById('eqDescripcion').value = equipo.descripcion || '';
-                        document.getElementById('eqUbicacion').value = equipo.ubicacion || '';
+                        
+                        // INICIO AGREGADO: Separar Edificio y Salón para mostrarlos correctamente
+                        let ubiGuardada = equipo.ubicacion || '';
+                        if(ubiGuardada.includes(' - ')) {
+                            let partes = ubiGuardada.split(' - ');
+                            let edificio = partes[0];
+                            let salon = partes.slice(1).join(' - ');
+                            
+                            let select = document.getElementById('eqEdificio');
+                            // Verificamos si el edificio coincide con las opciones del select
+                            if(Array.from(select.options).some(opt => opt.value === edificio)) {
+                                select.value = edificio;
+                                document.getElementById('eqSalon').value = salon;
+                            } else {
+                                select.value = "";
+                                document.getElementById('eqSalon').value = ubiGuardada;
+                            }
+                        } else {
+                            document.getElementById('eqEdificio').value = "";
+                            document.getElementById('eqSalon').value = ubiGuardada;
+                        }
+                        // FIN AGREGADO
+
                         btn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Actualizar</span>';
                     } else {
                         modoEdicion = false;
                         document.getElementById('searchMsg').innerHTML = `<span class="text-orange-400"><i class="fas fa-plus-circle"></i> Registro Nuevo.</span>`;
                         document.getElementById('eqPiezas').value = '1';
                         document.getElementById('eqDescripcion').value = '';
-                        document.getElementById('eqUbicacion').value = '';
+                        document.getElementById('eqEdificio').value = '';
+                        document.getElementById('eqSalon').value = '';
                         btn.innerHTML = '<i class="fas fa-save"></i> <span>Registrar</span>';
                     }
                     quitarFoto(); 
@@ -279,12 +310,18 @@
                 document.getElementById('eqDescripcion').value = descOriginal + "\nS/N: " + numSerieValor;
             }
 
+            // INICIO AGREGADO: Juntar Edificio y Salón para guardar en la BD
+            let edificioValor = document.getElementById('eqEdificio').value;
+            let salonValor = document.getElementById('eqSalon').value.trim();
+            let ubicacionFinal = edificioValor + " - " + salonValor;
+            // FIN AGREGADO
+
             const payload = {
                 accion: modoEdicion ? 'editarEquipo' : 'agregarEquipo',
                 inventario: document.getElementById('eqInventario').value.trim().toUpperCase(),
                 piezas: document.getElementById('eqPiezas').value,
                 descripcion: document.getElementById('eqDescripcion').value.trim(),
-                ubicacion: document.getElementById('eqUbicacion').value.trim(),
+                ubicacion: ubicacionFinal, 
                 fotoBase64: fotoDataFinal 
             };
 
