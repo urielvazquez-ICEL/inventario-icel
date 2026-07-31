@@ -105,11 +105,13 @@
                 </h3>
                 
                 <div class="flex flex-wrap w-full lg:w-auto gap-3 items-center justify-end">
+                    <!-- ACTUALIZACIÓN: Aquí se agregó Edificio D -->
                     <select id="filtroEdificio" onchange="filtrarTabla()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:border-indigo-500 bg-white cursor-pointer">
                         <option value="">Todos los Edificios</option>
                         <option value="Edificio A">Edificio A</option>
                         <option value="Edificio B">Edificio B</option>
                         <option value="Edificio C">Edificio C</option>
+                        <option value="Edificio D">Edificio D</option>
                         <option value="Bodega">Bodega</option>
                     </select>
 
@@ -181,7 +183,7 @@
     </div>
 
     <script>
-        const URL_API = 'https://script.google.com/macros/s/AKfycbyrAZwDPsVxdM3bKklP2eWwkiRktRo080cnxjcOMdDGg_YvEE46lqNkZwwyI0euPsMH2A/exec';
+        const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
         let datosGlobales = []; 
 
         function decodificarJwtResponse(token) {
@@ -338,14 +340,47 @@
         }
 
         function guardarEdicion() {
-            const id = document.getElementById('editIdOriginal').value;
-            alert(`Simulación de guardado para el ID: ${id}\n\n(Para que este botón funcione en la nube, debes agregar el caso 'editarEquipo' directo en tu código de Apps Script. Por ahora la interfaz visual ya está lista).`);
-            cerrarModal();
+            const payload = {
+                accion: 'editarEquipo',
+                inventario: document.getElementById('editIdOriginal').value,
+                piezas: document.getElementById('editPiezas').value,
+                descripcion: document.getElementById('editDescripcion').value.trim(),
+                ubicacion: document.getElementById('editUbicacion').value.trim()
+            };
+
+            fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    cerrarModal();
+                    cargarDatos(); 
+                } else {
+                    alert('Error: ' + res.message);
+                }
+            }).catch(err => alert('Error de conexión'));
         }
 
         function eliminarRegistro(id) {
-            if(confirm(`¿Estás seguro de que quieres eliminar todo el registro del inventario ${id}? Esta acción llamará la atención si fue un error del chico de servicio.`)) {
-                alert(`Simulación de borrado para: ${id}\n\n(Al igual que editar, requiere agregar el caso 'eliminarEquipo' en Apps Script).`);
+            if(confirm(`¿Eliminar definitivamente el inventario ${id}? Esta acción no se puede deshacer.`)) {
+                const payload = { accion: 'eliminarEquipo', inventario: id };
+
+                fetch(URL_API, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if(res.success) {
+                        cargarDatos(); 
+                    } else {
+                        alert('Error al eliminar: ' + res.message);
+                    }
+                }).catch(err => alert('Error de conexión'));
             }
         }
 
