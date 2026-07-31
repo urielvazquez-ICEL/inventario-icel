@@ -70,7 +70,7 @@
             </div>
             <div class="flex flex-col sm:flex-row gap-2 bg-indigo-900/50 p-2 rounded-lg border border-indigo-500/30">
                 <div class="flex w-full gap-2 bg-transparent border-b sm:border-b-0 border-indigo-500/50 pb-2 sm:pb-0">
-                    <input type="text" id="searchId" onblur="autobuscar()" placeholder="BUSCAR ID (Ej. LVI-001)" class="w-full bg-transparent border-none text-white outline-none px-2 uppercase placeholder-indigo-300">
+                    <input type="text" id="searchId" onblur="autobuscar()" placeholder="BUSCAR ID O SERIE..." class="w-full bg-transparent border-none text-white outline-none px-2 uppercase placeholder-indigo-300">
                     <button type="button" onclick="abrirEscaner('searchId')" class="bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md font-semibold text-white transition-colors shrink-0"><i class="fas fa-qrcode"></i></button>
                 </div>
                 <button onclick="buscarEquipo()" class="bg-[#00c853] hover:bg-[#00b048] px-4 py-2 rounded-md font-semibold text-sm flex items-center justify-center gap-2 w-full sm:w-auto transition-colors mt-1 sm:mt-0">
@@ -153,7 +153,7 @@
     </div>
 
     <script>
-        const URL_API = 'https://script.google.com/macros/s/AKfycby1iTpUpD9pF8McowQdF-TrmJ0Gs2Koh3XOL9yQR0jqcQThQyeekG6SqPfiGOL_qcnO8g/exec';
+        const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
 
         let modoEdicion = false;
         let fotoDataFinal = ""; 
@@ -184,7 +184,6 @@
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 
-                // MEJORA: Intenta capturar el nombre, si Google lo bloquea, captura el correo
                 responsableActual = datosUsuario.name || correoUsuario; 
             } else {
                 alert("Acceso denegado. Tu cuenta no está autorizada para capturar en este inventario.");
@@ -258,14 +257,30 @@
             window[callbackName] = function(res) {
                 delete window[callbackName]; document.body.removeChild(script);
                 if (res.success) {
-                    const equipo = res.data.find(eq => eq.inventario.toUpperCase() === idBuscado);
-                    document.getElementById('eqInventario').value = idBuscado;
+                    // Ahora busca coincidencia exacta con el ID o si el término está dentro de la descripción (Serie)
+                    const equipo = res.data.find(eq => 
+                        eq.inventario.toUpperCase() === idBuscado || 
+                        (eq.descripcion && eq.descripcion.toUpperCase().includes(idBuscado))
+                    );
 
                     if (equipo) {
                         modoEdicion = true;
+                        document.getElementById('eqInventario').value = equipo.inventario; // Muestra el ID real
+                        document.getElementById('searchId').value = equipo.inventario; // Actualiza el buscador
+
                         document.getElementById('searchMsg').innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle"></i> Localizado. Sube foto para actualizar.</span>`;
                         document.getElementById('eqPiezas').value = equipo.piezas || '1';
-                        document.getElementById('eqDescripcion').value = equipo.descripcion || '';
+                        
+                        // Extraer el S/N de la descripción para separarlo en sus casillas
+                        let descCompleta = equipo.descripcion || '';
+                        let idxSN = descCompleta.toUpperCase().indexOf('S/N:');
+                        if (idxSN !== -1) {
+                            document.getElementById('eqDescripcion').value = descCompleta.substring(0, idxSN).trim();
+                            document.getElementById('eqNumSerie').value = descCompleta.substring(idxSN + 4).trim();
+                        } else {
+                            document.getElementById('eqDescripcion').value = descCompleta;
+                            document.getElementById('eqNumSerie').value = '';
+                        }
                         
                         let ubiGuardada = equipo.ubicacion || '';
                         let select = document.getElementById('eqEdificio');
@@ -296,16 +311,17 @@
                         btn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Actualizar</span>';
                     } else {
                         modoEdicion = false;
+                        document.getElementById('eqInventario').value = idBuscado;
                         document.getElementById('searchMsg').innerHTML = `<span class="text-orange-400"><i class="fas fa-plus-circle"></i> Registro Nuevo.</span>`;
                         document.getElementById('eqPiezas').value = '1';
                         document.getElementById('eqDescripcion').value = '';
+                        document.getElementById('eqNumSerie').value = '';
                         document.getElementById('eqEdificio').value = '';
                         document.getElementById('eqSalon').value = '';
                         manejarBodega(); 
                         btn.innerHTML = '<i class="fas fa-save"></i> <span>Registrar</span>';
                     }
                     quitarFoto(); 
-                    document.getElementById('eqNumSerie').value = '';
                     btn.disabled = false;
                 }
             };
