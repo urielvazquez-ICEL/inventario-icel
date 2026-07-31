@@ -183,7 +183,9 @@
             if (alumnosPermitidos.includes(correoUsuario)) {
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                responsableActual = datosUsuario.name; 
+                
+                // MEJORA: Intenta capturar el nombre, si Google lo bloquea, captura el correo
+                responsableActual = datosUsuario.name || correoUsuario; 
             } else {
                 alert("Acceso denegado. Tu cuenta no está autorizada para capturar en este inventario.");
             }
