@@ -151,11 +151,11 @@
     </div>
 
     <script>
-        const URL_API = 'https://script.google.com/macros/s/AKfycbyrAZwDPsVxdM3bKklP2eWwkiRktRo080cnxjcOMdDGg_YvEE46lqNkZwwyI0euPsMH2A/exec';
+        const URL_API = 'https://script.google.com/macros/s/AKfycbxQjrBeul4jnDA1s-gMAhQaAMhisZX52SE8gXJljWV7rjOCBIGScs5xnah7oMxAly5mpg/exec';
 
         let modoEdicion = false;
         let fotoDataFinal = ""; 
-        let correoActual = ""; // Aquí guardamos quién capturó
+        let responsableActual = ""; // Variable para guardar el nombre completo
 
         function decodificarJwtResponse(token) {
             let base64Url = token.split('.')[1];
@@ -178,11 +178,13 @@
                 "000072748@alumnos.icel.edu.mx"
             ]; 
             
+            // Seguimos validando por el correo para mayor seguridad
             if (alumnosPermitidos.includes(correoUsuario)) {
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 
-                correoActual = correoUsuario; // Guardamos el correo
+                // Pero guardamos el NOMBRE para que eso sea lo que se mande a la base de datos
+                responsableActual = datosUsuario.name; 
             } else {
                 alert("Acceso denegado. Tu cuenta no está autorizada para capturar en este inventario.");
             }
@@ -316,7 +318,7 @@
                 descripcion: document.getElementById('eqDescripcion').value.trim(),
                 ubicacion: ubicacionFinal, 
                 fotoBase64: fotoDataFinal,
-                usuario: correoActual // Se envía el responsable
+                usuario: responsableActual // Ahora mandará el nombre en vez del correo
             };
 
             fetch(URL_API, {
