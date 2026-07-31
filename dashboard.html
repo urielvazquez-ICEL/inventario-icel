@@ -19,9 +19,9 @@
         #ssoOverlay, #modalEdicion { backdrop-filter: blur(8px); }
     </style>
 </head>
-<body class="text-gray-800 min-h-screen p-6">
+<body class="text-gray-800 min-h-screen p-2 sm:p-6">
 
-    <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center">
+    <div id="ssoOverlay" class="fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border-t-4 border-[#1a237e]">
             <div class="w-16 h-16 bg-[#1a237e] rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg">
                 <i class="fab fa-google"></i>
@@ -37,76 +37,75 @@
                  data-auto_prompt="false">
             </div>
             
-            <div class="g_id_signin flex justify-center" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+            <div class="g_id_signin flex justify-center overflow-hidden" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
         </div>
     </div>
 
     <div id="mainApp" class="max-w-7xl mx-auto hidden">
         
-        <header class="flex justify-between items-center mb-8 bg-[#1a237e] p-6 rounded-2xl shadow-lg border border-indigo-900 text-white">
-            <div class="flex items-center gap-4">
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 sm:mb-8 bg-[#1a237e] p-4 sm:p-6 rounded-2xl shadow-lg border border-indigo-900 text-white text-center md:text-left">
+            <div class="flex flex-col md:flex-row items-center gap-3 md:gap-4">
                 <img id="perfilGoogle" src="" alt="Perfil" class="w-12 h-12 rounded-full border-2 border-white shadow-inner hidden">
                 <div id="iconoAdmin" class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-2xl shadow-inner">
                     <i class="fas fa-user-tie"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-extrabold tracking-tight">Panel de Control IT</h1>
-                    <p class="text-sm text-indigo-200 mt-0.5" id="saludoUsuario">Acceso Exclusivo: Administración de Sistemas</p>
+                    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Panel de Control IT</h1>
+                    <p class="text-xs sm:text-sm text-indigo-200 mt-0.5" id="saludoUsuario">Acceso Exclusivo: Administración de Sistemas</p>
                 </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="cargarDatos()" class="bg-[#00c853] text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-[#00a844] transition-colors flex items-center gap-2 shadow-md">
-                    <i class="fas fa-sync-alt" id="iconoSync"></i> Actualizar BD
+            <div class="flex gap-2 sm:gap-3 w-full md:w-auto justify-center mt-2 md:mt-0">
+                <button onclick="cargarDatos()" class="flex-1 md:flex-none justify-center bg-[#00c853] text-white px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#00a844] transition-colors flex items-center gap-2 shadow-md">
+                    <i class="fas fa-sync-alt" id="iconoSync"></i> <span class="hidden sm:inline">Actualizar</span>
                 </button>
-                <button onclick="location.reload()" class="bg-red-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-red-600 transition-colors flex items-center gap-2 shadow-md">
+                <button onclick="location.reload()" class="flex-1 md:flex-none justify-center bg-red-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-red-600 transition-colors flex items-center gap-2 shadow-md">
                     <i class="fas fa-power-off"></i> Salir
                 </button>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between hover:shadow-md transition-shadow text-center sm:text-left gap-2 sm:gap-0">
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registros (Filas)</p>
-                    <h2 class="text-4xl font-black text-[#1a237e]" id="countRegistros">0</h2>
+                    <p class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registros</p>
+                    <h2 class="text-3xl sm:text-4xl font-black text-[#1a237e]" id="countRegistros">0</h2>
                 </div>
-                <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-2xl"><i class="fas fa-list"></i></div>
+                <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xl sm:text-2xl"><i class="fas fa-list"></i></div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between hover:shadow-md transition-shadow text-center sm:text-left gap-2 sm:gap-0">
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Piezas</p>
-                    <h2 class="text-4xl font-black text-green-500" id="countPiezas">0</h2>
+                    <p class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Piezas</p>
+                    <h2 class="text-3xl sm:text-4xl font-black text-green-500" id="countPiezas">0</h2>
                 </div>
-                <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-2xl"><i class="fas fa-desktop"></i></div>
+                <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-xl sm:text-2xl"><i class="fas fa-desktop"></i></div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between hover:shadow-md transition-shadow text-center sm:text-left gap-2 sm:gap-0">
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">En Bodega</p>
-                    <h2 class="text-4xl font-black text-orange-500" id="countBodega">0</h2>
+                    <p class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">En Bodega</p>
+                    <h2 class="text-3xl sm:text-4xl font-black text-orange-500" id="countBodega">0</h2>
                 </div>
-                <div class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 text-2xl"><i class="fas fa-door-closed"></i></div>
+                <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 text-xl sm:text-2xl"><i class="fas fa-door-closed"></i></div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-red-100 flex items-center justify-between hover:shadow-md transition-shadow bg-red-50/30">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-red-100 flex flex-col sm:flex-row items-center justify-between hover:shadow-md transition-shadow bg-red-50/30 text-center sm:text-left gap-2 sm:gap-0">
                 <div>
-                    <p class="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Falta Foto / S/N</p>
-                    <h2 class="text-4xl font-black text-red-600" id="countIncompletos">0</h2>
+                    <p class="text-[10px] sm:text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Faltan Datos</p>
+                    <h2 class="text-3xl sm:text-4xl font-black text-red-600" id="countIncompletos">0</h2>
                 </div>
-                <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-2xl"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-xl sm:text-2xl"><i class="fas fa-exclamation-triangle"></i></div>
             </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-            <div class="p-5 border-b border-gray-100 bg-gray-50 flex flex-col lg:flex-row justify-between items-center gap-4">
-                <h3 class="font-bold text-gray-700 text-lg flex items-center gap-2 whitespace-nowrap">
-                    <i class="fas fa-database text-indigo-500"></i> Auditoría de Inventario
+            <div class="p-4 sm:p-5 border-b border-gray-100 bg-gray-50 flex flex-col lg:flex-row justify-between items-center gap-4">
+                <h3 class="font-bold text-gray-700 text-lg flex items-center gap-2 whitespace-nowrap self-start lg:self-auto">
+                    <i class="fas fa-database text-indigo-500"></i> Auditoría
                 </h3>
                 
-                <div class="flex flex-wrap w-full lg:w-auto gap-3 items-center justify-end">
-                    <!-- ACTUALIZACIÓN: Aquí se agregó Edificio D -->
-                    <select id="filtroEdificio" onchange="filtrarTabla()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:border-indigo-500 bg-white cursor-pointer">
+                <div class="flex flex-col sm:flex-row w-full lg:w-auto gap-3 items-center justify-end">
+                    <select id="filtroEdificio" onchange="filtrarTabla()" class="w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:border-indigo-500 bg-white cursor-pointer">
                         <option value="">Todos los Edificios</option>
                         <option value="Edificio A">Edificio A</option>
                         <option value="Edificio B">Edificio B</option>
@@ -117,24 +116,24 @@
 
                     <div class="relative w-full sm:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" id="buscadorTabla" onkeyup="filtrarTabla()" placeholder="Buscar etiqueta, modelo, responsable..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-all">
+                        <input type="text" id="buscadorTabla" onkeyup="filtrarTabla()" placeholder="Buscar etiqueta, modelo..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-all">
                     </div>
                     
-                    <button onclick="exportarCSV()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors flex items-center gap-2">
-                        <i class="fas fa-file-download"></i> <span class="hidden sm:inline">Exportar</span>
+                    <button onclick="exportarCSV()" class="w-full sm:w-auto justify-center bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-file-download"></i> Exportar
                     </button>
                 </div>
             </div>
 
             <div class="overflow-x-auto tabla-scroll max-h-[500px]">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse min-w-[800px]">
                     <thead class="bg-white sticky top-0 shadow-sm z-10">
                         <tr>
                             <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">ID</th>
                             <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b text-center">Piezas</th>
                             <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b w-1/3">Descripción</th>
                             <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">Ubicación</th>
-                            <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">Capturó (Responsable)</th>
+                            <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">Responsable</th>
                             <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b text-center">Foto</th>
                             <th class="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b text-center">Acciones</th>
                         </tr>
@@ -152,17 +151,17 @@
 
     <div id="modalEdicion" class="fixed inset-0 bg-gray-900/80 z-[60] flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-            <div class="bg-[#1a237e] px-6 py-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-lg"><i class="fas fa-edit mr-2"></i> Editar Registro</h3>
+            <div class="bg-[#1a237e] px-4 sm:px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-base sm:text-lg"><i class="fas fa-edit mr-2"></i> Editar Registro</h3>
                 <button onclick="cerrarModal()" class="text-indigo-200 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-4 sm:p-6 space-y-4">
                 <input type="hidden" id="editIdOriginal">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
                     <textarea id="editDescripcion" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-indigo-500 outline-none"></textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Piezas</label>
                         <input type="number" id="editPiezas" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-indigo-500 outline-none">
@@ -173,9 +172,9 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
-                <button onclick="cerrarModal()" class="px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold transition-colors">Cancelar</button>
-                <button onclick="guardarEdicion()" class="px-4 py-2 text-white bg-[#00c853] hover:bg-[#00a844] rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+            <div class="bg-gray-50 px-4 sm:px-6 py-4 border-t flex justify-end gap-3">
+                <button onclick="cerrarModal()" class="px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold transition-colors w-full sm:w-auto">Cancelar</button>
+                <button onclick="guardarEdicion()" class="px-4 py-2 text-white bg-[#00c853] hover:bg-[#00a844] rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
                     <i class="fas fa-save"></i> Guardar
                 </button>
             </div>
@@ -289,14 +288,14 @@
                                 ${eq.ubicacion}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-xs text-gray-500 font-medium">
+                        <td class="px-4 py-3 text-xs text-gray-500 font-medium whitespace-nowrap">
                             <i class="fas fa-user text-gray-300 mr-1"></i> ${responsable}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-center">${botonFoto}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-center">
-                            <div class="flex gap-2 justify-center opacity-50 group-hover:opacity-100 transition-opacity">
-                                <button onclick="abrirModalEditar('${eq.inventario}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="Editar"><i class="fas fa-edit"></i></button>
-                                <button onclick="eliminarRegistro('${eq.inventario}')" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                            <div class="flex gap-2 justify-center opacity-100 md:opacity-50 group-hover:opacity-100 transition-opacity">
+                                <button onclick="abrirModalEditar('${eq.inventario}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-lg" title="Editar"><i class="fas fa-edit"></i></button>
+                                <button onclick="eliminarRegistro('${eq.inventario}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-lg" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         </td>
                     </tr>
