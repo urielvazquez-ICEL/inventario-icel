@@ -111,13 +111,15 @@
                 <div>
                     <label class="input-label">4. UBICACIÓN *</label>
                     <div class="flex gap-2 mt-1">
-                        <select id="eqEdificio" required class="input-field w-2/5 appearance-none bg-white font-semibold text-gray-700">
+                        <select id="eqEdificio" required onchange="manejarBodega()" class="input-field w-2/5 appearance-none bg-white font-semibold text-gray-700">
                             <option value="" disabled selected>Edificio...</option>
                             <option value="Edificio A">Edificio A</option>
                             <option value="Edificio B">Edificio B</option>
                             <option value="Edificio C">Edificio C</option>
+                            <option value="Edificio D">Edificio D</option>
+                            <option value="Bodega">Bodega</option>
                         </select>
-                        <input type="text" id="eqSalon" required placeholder="Ej. Lab 1, C1..." class="input-field w-3/5">
+                        <input type="text" id="eqSalon" required placeholder="Ej. Lab 1, C1..." class="input-field w-3/5 transition-all">
                     </div>
                 </div>
                 
@@ -155,7 +157,7 @@
 
         let modoEdicion = false;
         let fotoDataFinal = ""; 
-        let responsableActual = ""; // Variable para guardar el nombre completo
+        let responsableActual = ""; 
 
         function decodificarJwtResponse(token) {
             let base64Url = token.split('.')[1];
@@ -178,15 +180,26 @@
                 "000072748@alumnos.icel.edu.mx"
             ]; 
             
-            // Seguimos validando por el correo para mayor seguridad
             if (alumnosPermitidos.includes(correoUsuario)) {
                 document.getElementById('ssoOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                
-                // Pero guardamos el NOMBRE para que eso sea lo que se mande a la base de datos
                 responsableActual = datosUsuario.name; 
             } else {
                 alert("Acceso denegado. Tu cuenta no está autorizada para capturar en este inventario.");
+            }
+        }
+
+        function manejarBodega() {
+            const select = document.getElementById('eqEdificio');
+            const inputSalon = document.getElementById('eqSalon');
+            
+            if (select.value === 'Bodega') {
+                inputSalon.classList.add('hidden');
+                inputSalon.required = false;
+                inputSalon.value = '';
+            } else {
+                inputSalon.classList.remove('hidden');
+                inputSalon.required = true;
             }
         }
 
@@ -253,23 +266,30 @@
                         document.getElementById('eqDescripcion').value = equipo.descripcion || '';
                         
                         let ubiGuardada = equipo.ubicacion || '';
-                        if(ubiGuardada.includes(' - ')) {
+                        let select = document.getElementById('eqEdificio');
+                        let inputSalon = document.getElementById('eqSalon');
+
+                        if (ubiGuardada === 'Bodega') {
+                            select.value = 'Bodega';
+                            inputSalon.value = '';
+                        } else if (ubiGuardada.includes(' - ')) {
                             let partes = ubiGuardada.split(' - ');
                             let edificio = partes[0];
                             let salon = partes.slice(1).join(' - ');
                             
-                            let select = document.getElementById('eqEdificio');
                             if(Array.from(select.options).some(opt => opt.value === edificio)) {
                                 select.value = edificio;
-                                document.getElementById('eqSalon').value = salon;
+                                inputSalon.value = salon;
                             } else {
                                 select.value = "";
-                                document.getElementById('eqSalon').value = ubiGuardada;
+                                inputSalon.value = ubiGuardada;
                             }
                         } else {
-                            document.getElementById('eqEdificio').value = "";
-                            document.getElementById('eqSalon').value = ubiGuardada;
+                            select.value = "";
+                            inputSalon.value = ubiGuardada;
                         }
+                        
+                        manejarBodega(); 
 
                         btn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Actualizar</span>';
                     } else {
@@ -279,6 +299,7 @@
                         document.getElementById('eqDescripcion').value = '';
                         document.getElementById('eqEdificio').value = '';
                         document.getElementById('eqSalon').value = '';
+                        manejarBodega(); 
                         btn.innerHTML = '<i class="fas fa-save"></i> <span>Registrar</span>';
                     }
                     quitarFoto(); 
@@ -309,7 +330,7 @@
 
             let edificioValor = document.getElementById('eqEdificio').value;
             let salonValor = document.getElementById('eqSalon').value.trim();
-            let ubicacionFinal = edificioValor + " - " + salonValor;
+            let ubicacionFinal = (edificioValor === 'Bodega') ? 'Bodega' : (edificioValor + " - " + salonValor);
 
             const payload = {
                 accion: modoEdicion ? 'editarEquipo' : 'agregarEquipo',
@@ -318,7 +339,7 @@
                 descripcion: document.getElementById('eqDescripcion').value.trim(),
                 ubicacion: ubicacionFinal, 
                 fotoBase64: fotoDataFinal,
-                usuario: responsableActual // Ahora mandará el nombre en vez del correo
+                usuario: responsableActual 
             };
 
             fetch(URL_API, {
@@ -346,6 +367,7 @@
 
         function resetFormulario() {
             document.getElementById('formEquipo').reset();
+            manejarBodega(); 
             quitarFoto();
             document.getElementById('searchId').value = "";
             document.getElementById('searchMsg').innerHTML = "";
